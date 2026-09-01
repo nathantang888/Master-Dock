@@ -36,28 +36,149 @@ public struct GlassButton: View {
             HStack(spacing: 6) {
                 if let icon = iconSystemName {
                     Image(systemName: icon)
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                 }
                 Text(title)
-                    .font(AppTypography.bodyBold)
+                    .font(AppTypography.captionBold)
             }
             .foregroundColor(.white)
             .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.vertical, 7)
             .background(
-                RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                    .fill(buttonFillStyle)
-                    .background(
-                        RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                            .fill(.ultraThinMaterial)
-                    )
+                ZStack {
+                    RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                    RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
+                        .fill(buttonFillStyle)
+                    RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
+                        .fill(isHovered ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
+                }
             )
             .overlay(
                 RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                    .strokeBorder(GlassTheme.liquidSpecularBorder, lineWidth: 0.9)
+                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.liquidSpecularBorder, lineWidth: 0.75)
             )
             .shadow(color: accentColor?.opacity(0.4) ?? GlassTheme.ambientShadow, radius: isHovered ? 8 : 4, x: 0, y: isHovered ? 3 : 1)
             .scaleEffect(isPressed ? 0.96 : (isHovered ? 1.02 : 1.0))
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                self.isHovered = hovering
+            }
+        }
+    }
+}
+
+/// Circular or rounded liquid glass icon button with specular rim
+public struct GlassIconButton: View {
+    private let iconSystemName: String
+    private let size: CGFloat
+    private let iconSize: CGFloat
+    private let accentColor: Color?
+    private let helpText: String?
+    private let action: () -> Void
+    
+    @State private var isHovered = false
+    
+    public init(
+        iconSystemName: String,
+        size: CGFloat = 28,
+        iconSize: CGFloat = 11,
+        accentColor: Color? = nil,
+        helpText: String? = nil,
+        action: @escaping () -> Void
+    ) {
+        self.iconSystemName = iconSystemName
+        self.size = size
+        self.iconSize = iconSize
+        self.accentColor = accentColor
+        self.helpText = helpText
+        self.action = action
+    }
+    
+    public var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle()
+                    .fill(.ultraThinMaterial)
+                
+                Circle()
+                    .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
+                
+                Circle()
+                    .fill(isHovered ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
+                
+                Image(systemName: iconSystemName)
+                    .font(.system(size: iconSize, weight: .semibold))
+                    .foregroundColor(accentColor ?? (isHovered ? .white : .white.opacity(0.85)))
+            }
+            .frame(width: size, height: size)
+            .overlay(
+                Circle()
+                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.75)
+            )
+            .shadow(color: isHovered ? (accentColor?.opacity(0.4) ?? GlassTheme.ambientShadow) : Color.clear, radius: 6, x: 0, y: 2)
+            .scaleEffect(isHovered ? 1.06 : 1.0)
+        }
+        .buttonStyle(.plain)
+        .help(helpText ?? "")
+        .onHover { hovering in
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                self.isHovered = hovering
+            }
+        }
+    }
+}
+
+/// Frosted liquid glass pill button (matching macOS "Edit Widgets" button style)
+public struct GlassPillButton: View {
+    private let title: String
+    private let iconSystemName: String?
+    private let action: () -> Void
+    
+    @State private var isHovered = false
+    
+    public init(
+        title: String,
+        iconSystemName: String? = nil,
+        action: @escaping () -> Void
+    ) {
+        self.title = title
+        self.iconSystemName = iconSystemName
+        self.action = action
+    }
+    
+    public var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if let icon = iconSystemName {
+                    Image(systemName: icon)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(GlassTheme.accentCyan)
+                }
+                Text(title)
+                    .font(AppTypography.captionBold)
+                    .foregroundColor(isHovered ? .white : .white.opacity(0.90))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background(
+                ZStack {
+                    Capsule()
+                        .fill(.ultraThinMaterial)
+                    Capsule()
+                        .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
+                    Capsule()
+                        .fill(isHovered ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
+                }
+            )
+            .overlay(
+                Capsule()
+                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.75)
+            )
+            .shadow(color: isHovered ? Color.black.opacity(0.4) : Color.black.opacity(0.2), radius: isHovered ? 8 : 4, x: 0, y: isHovered ? 3 : 1)
+            .scaleEffect(isHovered ? 1.03 : 1.0)
         }
         .buttonStyle(.plain)
         .onHover { hovering in
@@ -97,38 +218,41 @@ public struct GlassSearchBar: View {
     public var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(.white.opacity(0.6))
-                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(isFocused ? GlassTheme.accentCyan : .white.opacity(0.6))
+                .font(.system(size: 12, weight: .medium))
             
             TextField(placeholder, text: $text)
                 .textFieldStyle(.plain)
-                .font(AppTypography.body)
+                .font(AppTypography.caption)
                 .foregroundColor(.white)
                 .focused($isFocused)
             
             if !text.isEmpty {
                 Button(action: { text = "" }) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.white.opacity(0.5))
-                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.55))
+                        .font(.system(size: 12))
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, 7)
         .background(
-            RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                .fill(searchFillStyle)
-                .background(
-                    RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                )
+            ZStack {
+                RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
+                    .fill(searchFillStyle)
+                RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
+                    .fill(GlassTheme.liquidGlassSheen)
+            }
         )
         .overlay(
             RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                .strokeBorder(searchBorderStyle, lineWidth: 0.8)
+                .strokeBorder(searchBorderStyle, lineWidth: isFocused ? 1.0 : 0.65)
         )
+        .shadow(color: isFocused ? GlassTheme.accentCyan.opacity(0.25) : Color.clear, radius: 6, x: 0, y: 1)
     }
 }
 
@@ -166,12 +290,16 @@ public struct SectionHeader: View {
             if let count = count {
                 Text("\(count)")
                     .font(AppTypography.micro)
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(.white.opacity(0.8))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(
                         Capsule()
-                            .fill(Color.white.opacity(0.12))
+                            .fill(Color.white.opacity(0.14))
+                    )
+                    .overlay(
+                        Capsule()
+                            .strokeBorder(Color.white.opacity(0.2), lineWidth: 0.5)
                     )
             }
             
@@ -188,3 +316,4 @@ public struct SectionHeader: View {
         }
     }
 }
+

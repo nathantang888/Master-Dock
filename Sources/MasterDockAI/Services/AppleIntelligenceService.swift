@@ -11,18 +11,26 @@ public final class AppleIntelligenceService: AIServiceProtocol, @unchecked Senda
     public let provider: AIProvider = .appleIntelligence
     
     #if canImport(FoundationModels)
-    private var session: LanguageModelSession?
+    private var sessionStorage: Any?
+    
+    @available(macOS 26.0, *)
+    private var session: LanguageModelSession? {
+        get { sessionStorage as? LanguageModelSession }
+        set { sessionStorage = newValue }
+    }
     #endif
     
     public init() {
         #if canImport(FoundationModels)
-        if SystemLanguageModel.default.isAvailable {
-            self.session = LanguageModelSession(
-                instructions: """
-                You are Master Dock AI, an ultra-fast, intelligent, and helpful macOS desktop companion powered natively by Apple Intelligence.
-                Provide concise, accurate, well-formatted answers with markdown, bullet points, and code blocks when appropriate.
-                """
-            )
+        if #available(macOS 26.0, *) {
+            if SystemLanguageModel.default.isAvailable {
+                self.sessionStorage = LanguageModelSession(
+                    instructions: """
+                    You are Master Dock AI, an ultra-fast, intelligent, and helpful macOS desktop companion powered natively by Apple Intelligence.
+                    Provide concise, accurate, well-formatted answers with markdown, bullet points, and code blocks when appropriate.
+                    """
+                )
+            }
         }
         #endif
     }
@@ -37,29 +45,31 @@ public final class AppleIntelligenceService: AIServiceProtocol, @unchecked Senda
                 }
                 
                 #if canImport(FoundationModels)
-                if SystemLanguageModel.default.isAvailable {
-                    do {
-                        // Initialize session or use configured session
-                        let activeSession = self.session ?? LanguageModelSession(
-                            instructions: "You are Master Dock AI, a helpful macOS desktop assistant powered by Apple Intelligence."
-                        )
-                        
-                        var previousLength = 0
-                        let stream = activeSession.streamResponse(to: trimmed)
-                        
-                        for try await snapshot in stream {
-                            let currentContent = snapshot.content
-                            if currentContent.count > previousLength {
-                                let delta = String(currentContent.dropFirst(previousLength))
-                                continuation.yield(delta)
-                                previousLength = currentContent.count
+                if #available(macOS 26.0, *) {
+                    if SystemLanguageModel.default.isAvailable {
+                        do {
+                            // Initialize session or use configured session
+                            let activeSession = self.session ?? LanguageModelSession(
+                                instructions: "You are Master Dock AI, a helpful macOS desktop assistant powered by Apple Intelligence."
+                            )
+                            
+                            var previousLength = 0
+                            let stream = activeSession.streamResponse(to: trimmed)
+                            
+                            for try await snapshot in stream {
+                                let currentContent = snapshot.content
+                                if currentContent.count > previousLength {
+                                    let delta = String(currentContent.dropFirst(previousLength))
+                                    continuation.yield(delta)
+                                    previousLength = currentContent.count
+                                }
                             }
+                            
+                            continuation.finish()
+                            return
+                        } catch {
+                            print("[AppleIntelligenceService] Real-time inference error: \(error)")
                         }
-                        
-                        continuation.finish()
-                        return
-                    } catch {
-                        print("[AppleIntelligenceService] Real-time inference error: \(error)")
                     }
                 }
                 #endif

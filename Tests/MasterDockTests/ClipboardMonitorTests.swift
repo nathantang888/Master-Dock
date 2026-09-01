@@ -1,4 +1,6 @@
 import Foundation
+import AppKit
+import MasterDockServices
 
 final class ClipboardMonitorTests {
     func testClipboardItemCreation() {

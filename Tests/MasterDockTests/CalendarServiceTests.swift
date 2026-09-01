@@ -1,4 +1,5 @@
 import Foundation
+import MasterDockServices
 
 final class CalendarServiceTests {
     func testMeetingCountdownFormatting() {

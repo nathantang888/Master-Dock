@@ -1,4 +1,5 @@
 import Foundation
+import MasterDockCore
 
 final class GestureStateMachineTests {
     var stateMachine: GestureStateMachine!

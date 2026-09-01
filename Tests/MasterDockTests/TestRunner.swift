@@ -1,4 +1,8 @@
 import Foundation
+import MasterDockCore
+import MasterDockServices
+import MasterDockAI
+import MasterDockUI
 
 @main
 struct TestRunner {
@@ -103,9 +107,85 @@ struct TestRunner {
             a.testPromptTemplateResolution()
         }
         
+        print("\n-> [Suite] Media Controller & Multi-Platform Tests:")
+        await runTest("testMediaSourceProperties") {
+            let m = MediaServiceTests()
+            m.testMediaSourceProperties()
+        }
+        await runTest("testMediaTrackFormatting") {
+            let m = MediaServiceTests()
+            m.testMediaTrackFormatting()
+        }
+        await runTest("testMediaPlaylistAndTracks") {
+            let m = MediaServiceTests()
+            m.testMediaPlaylistAndTracks()
+        }
+        await runTest("testPlaybackControlsMath") {
+            let m = MediaServiceTests()
+            m.testPlaybackControlsMath()
+        }
+        await runTest("testVolumeClamping") {
+            let m = MediaServiceTests()
+            m.testVolumeClamping()
+        }
+        await runTest("testShuffleAndRepeatCycling") {
+            let m = MediaServiceTests()
+            m.testShuffleAndRepeatCycling()
+        }
+        await runTest("testLikedTracks") {
+            let m = MediaServiceTests()
+            m.testLikedTracks()
+        }
+        await runTest("testCustomPlaylists") {
+            let m = MediaServiceTests()
+            m.testCustomPlaylists()
+        }
+        await runTest("testPlatformInformation") {
+            let m = MediaServiceTests()
+            m.testPlatformInformation()
+        }
+        
+        print("\n-> [Suite] Dynamic Scroll Edge Fade Tests:")
+        await runTest("testInitialRestingStateHasZeroFade") {
+            let s = ScrollEdgeFadeTests()
+            s.testInitialRestingStateHasZeroFade()
+        }
+        await runTest("testScrollingDownStartsFading") {
+            let s = ScrollEdgeFadeTests()
+            s.testScrollingDownStartsFading()
+        }
+        await runTest("testFullyScrolledPastThreshold") {
+            let s = ScrollEdgeFadeTests()
+            s.testFullyScrolledPastThreshold()
+        }
+        await runTest("testReachingBottomClearsBottomFade") {
+            let s = ScrollEdgeFadeTests()
+            s.testReachingBottomClearsBottomFade()
+        }
+        await runTest("testScrollingBackToTopClearsFade") {
+            let s = ScrollEdgeFadeTests()
+            s.testScrollingBackToTopClearsFade()
+        }
+        await runTest("testNegativeOverscrollSafelyClamped") {
+            let s = ScrollEdgeFadeTests()
+            s.testNegativeOverscrollSafelyClamped()
+        }
+        await runTest("testHorizontalRestingStateHasZeroFade") {
+            let s = ScrollEdgeFadeTests()
+            s.testHorizontalRestingStateHasZeroFade()
+        }
+        await runTest("testHorizontalScrollingStartsFading") {
+            let s = ScrollEdgeFadeTests()
+            s.testHorizontalScrollingStartsFading()
+        }
+        await runTest("testHorizontalReachingEndClearsTrailingFade") {
+            let s = ScrollEdgeFadeTests()
+            s.testHorizontalReachingEndClearsTrailingFade()
+        }
+        
         print("\n==================================================")
         print("SUMMARY: \(passed) Total Tests | All \(passed) Passed | 0 Failed")
         print("==================================================")
-        print("🎉 ALL 13 TEST SUITES PASSED FLAWLESSLY!\n")
+        print("🎉 ALL TEST SUITES PASSED FLAWLESSLY!\n")
     }
 }

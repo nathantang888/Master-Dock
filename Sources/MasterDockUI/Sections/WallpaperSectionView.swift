@@ -1,6 +1,8 @@
 import SwiftUI
 import AppKit
 import ImageIO
+import MasterDockCore
+import MasterDockServices
 
 public final class WallpaperThumbnailCache: @unchecked Sendable {
     public static let shared = WallpaperThumbnailCache()
@@ -68,19 +70,10 @@ public struct WallpaperSectionView: View {
                 }
                 .padding(.horizontal, 4)
                 .padding(.vertical, 4)
-            }
-            .mask(
-                LinearGradient(
-                    stops: [
-                        .init(color: .clear, location: 0.0),
-                        .init(color: .black, location: 0.03),
-                        .init(color: .black, location: 0.97),
-                        .init(color: .clear, location: 1.0)
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
+                .background(
+                    ScrollEdgeFadeObserver(axis: .horizontal, fadeLength: 20.0, fadeThreshold: 14.0)
                 )
-            )
+            }
         }
     }
 }

@@ -1,5 +1,9 @@
 import Cocoa
 import SwiftUI
+import MasterDockCore
+import MasterDockServices
+import MasterDockAI
+import MasterDockUI
 
 @MainActor
 public final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -67,6 +71,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         
         viewModel.windowController.setup(with: rootView)
         viewModel.start()
+        viewModel.windowController.present(mode: .standardDock, animated: true)
         
         setupStatusItem()
     }

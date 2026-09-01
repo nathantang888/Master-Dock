@@ -27,7 +27,7 @@
     <key>NSCalendarsUsageDescription</key>
     <string>Master Dock requires calendar access to display today's upcoming meetings.</string>
     <key>NSAppleEventsUsageDescription</key>
-    <string>Master Dock requires automation permissions to control Apple Music and Spotify playback.</string>
+    <string>Master Dock requires automation permissions to control Apple Music, Spotify, YouTube Music, and media playback.</string>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSSupportsAutomaticGraphicsSwitching</key>

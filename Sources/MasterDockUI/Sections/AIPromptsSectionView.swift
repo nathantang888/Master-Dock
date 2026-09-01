@@ -1,4 +1,7 @@
 import SwiftUI
+import MasterDockCore
+import MasterDockServices
+import MasterDockAI
 
 public struct AIPromptsSectionView: View {
     @ObservedObject public var promptService: PromptLibraryService
@@ -41,19 +44,10 @@ public struct AIPromptsSectionView: View {
                 }
                 .padding(.horizontal, 4)
                 .padding(.vertical, 2)
-            }
-            .mask(
-                LinearGradient(
-                    stops: [
-                        .init(color: .clear, location: 0.0),
-                        .init(color: .black, location: 0.03),
-                        .init(color: .black, location: 0.97),
-                        .init(color: .clear, location: 1.0)
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
+                .background(
+                    ScrollEdgeFadeObserver(axis: .horizontal, fadeLength: 18.0, fadeThreshold: 12.0)
                 )
-            )
+            }
         }
     }
 }

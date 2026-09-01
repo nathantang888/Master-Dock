@@ -1,4 +1,7 @@
 import SwiftUI
+import MasterDockCore
+import MasterDockServices
+import MasterDockAI
 
 public struct MasterDockRootView: View {
     @ObservedObject public var clipboardService: ClipboardMonitorService
@@ -27,6 +30,8 @@ public struct MasterDockRootView: View {
     public var onDismiss: () -> Void
     
     @State private var selectedTab: DockTab = .all
+    @State private var tabLeadingFade: CGFloat = 0.0
+    @State private var tabTrailingFade: CGFloat = 1.0
     
     public enum DockTab: String, CaseIterable, Identifiable {
         case all = "All"
@@ -90,16 +95,21 @@ public struct MasterDockRootView: View {
     public var body: some View {
         ZStack {
             if isVoiceModeActive {
-                AIVoiceOverlayView(
-                    audioPipeline: audioPipeline,
-                    liveTranscript: liveVoiceTranscript,
-                    userPrompt: conversationHistory.filter { $0.role == .user }.last?.content ?? "",
-                    aiResponseText: conversationHistory.filter { $0.role == .assistant }.last?.content ?? "",
-                    isAIStreaming: isAIStreaming,
-                    onClose: { isVoiceModeActive = false },
-                    onStopAndSend: onVoiceDone,
-                    onStartRecording: onStartVoice
-                )
+                GlassCard {
+                    AIVoiceOverlayView(
+                        audioPipeline: audioPipeline,
+                        liveTranscript: liveVoiceTranscript,
+                        userPrompt: conversationHistory.filter { $0.role == .user }.last?.content ?? "",
+                        aiResponseText: conversationHistory.filter { $0.role == .assistant }.last?.content ?? "",
+                        isAIStreaming: isAIStreaming,
+                        onClose: { isVoiceModeActive = false },
+                        onStopAndSend: onVoiceDone,
+                        onStartRecording: onStartVoice
+                    )
+                }
+                .padding(.horizontal, 10)
+                .padding(.top, 14)
+                .padding(.bottom, 24)
                 .transition(.opacity.combined(with: .scale(scale: 0.96)))
             } else {
                 standardDockContent
@@ -108,62 +118,57 @@ public struct MasterDockRootView: View {
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isVoiceModeActive)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .liquidPanelBackground()
+        .preferredColorScheme(.dark)
     }
     
     private var standardDockContent: some View {
-        VStack(spacing: 10) {
-            // Floating Top Header Bar
+        VStack(spacing: 8) {
+            // Clean Top Header Bar (Matching macOS Notification Center Header)
             HStack {
                 HStack(spacing: 8) {
                     Image(systemName: "dock.rectangle")
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.system(size: 16, weight: .bold))
                         .foregroundColor(GlassTheme.accentCyan)
                     
                     Text("Master Dock")
-                        .font(AppTypography.titleMedium)
+                        .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
                 }
                 
                 Spacer()
                 
-                HStack(spacing: 8) {
-                    Button(action: { isVoiceModeActive = true; onStartVoice() }) {
-                        Image(systemName: "mic.fill")
-                            .font(.system(size: 11))
-                            .foregroundColor(.white.opacity(0.9))
-                            .padding(7)
-                            .background(Circle().fill(Color.white.opacity(0.14)))
-                    }
-                    .buttonStyle(.plain)
-                    .help("Open Apple Intelligence Voice Companion")
+                HStack(spacing: 7) {
+                    GlassIconButton(
+                        iconSystemName: "mic.fill",
+                        size: 28,
+                        iconSize: 11,
+                        helpText: "Apple Intelligence Voice Companion",
+                        action: { isVoiceModeActive = true; onStartVoice() }
+                    )
                     
-                    Button(action: onOpenSettings) {
-                        Image(systemName: "gearshape.fill")
-                            .font(.system(size: 11))
-                            .foregroundColor(.white.opacity(0.9))
-                            .padding(7)
-                            .background(Circle().fill(Color.white.opacity(0.14)))
-                    }
-                    .buttonStyle(.plain)
+                    GlassIconButton(
+                        iconSystemName: "gearshape.fill",
+                        size: 28,
+                        iconSize: 11,
+                        helpText: "Master Dock Preferences",
+                        action: onOpenSettings
+                    )
                     
-                    Button(action: onDismiss) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.white.opacity(0.8))
-                            .padding(7)
-                            .background(Circle().fill(Color.white.opacity(0.14)))
-                    }
-                    .buttonStyle(.plain)
+                    GlassIconButton(
+                        iconSystemName: "xmark",
+                        size: 28,
+                        iconSize: 10,
+                        helpText: "Dismiss Dock",
+                        action: onDismiss
+                    )
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .liquidGlassCard(cornerRadius: 18)
-            .padding(.leading, 10)
-            .padding(.trailing, 10)
-            .padding(.top, 38)
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 2)
             
-            // Floating Tab Filter Bar (Smooth Single-Line Scrollable)
+            // Floating Tab Filter Bar (Smooth Single-Line Scrollable with Dynamic Edge Fading)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
                     ForEach(DockTab.allCases) { tab in
@@ -173,28 +178,59 @@ public struct MasterDockRootView: View {
                                 .lineLimit(1)
                                 .fixedSize(horizontal: true, vertical: false)
                                 .foregroundColor(selectedTab == tab ? .white : .white.opacity(0.75))
-                                .padding(.horizontal, 10)
+                                .padding(.horizontal, 11)
                                 .padding(.vertical, 5)
                                 .background(
-                                    Capsule()
-                                        .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.85)) : AnyShapeStyle(GlassTheme.pillGlassFill))
-                                        .background(Capsule().fill(.ultraThinMaterial))
+                                    ZStack {
+                                        Capsule()
+                                            .fill(.ultraThinMaterial)
+                                        Capsule()
+                                            .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.85)) : AnyShapeStyle(GlassTheme.pillGlassFill))
+                                        Capsule()
+                                            .fill(selectedTab == tab ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
+                                    }
                                 )
                                 .overlay(
                                     Capsule()
-                                        .strokeBorder(selectedTab == tab ? AnyShapeStyle(Color.white.opacity(0.5)) : AnyShapeStyle(GlassTheme.subtleSpecularBorder), lineWidth: 0.8)
+                                        .strokeBorder(selectedTab == tab ? AnyShapeStyle(Color.white.opacity(0.60)) : AnyShapeStyle(GlassTheme.subtleSpecularBorder), lineWidth: 0.65)
                                 )
-                                .shadow(color: selectedTab == tab ? GlassTheme.accentBlue.opacity(0.4) : Color.clear, radius: 6, x: 0, y: 2)
+                                .shadow(color: selectedTab == tab ? GlassTheme.accentBlue.opacity(0.40) : Color.clear, radius: 6, x: 0, y: 1)
                         }
                         .buttonStyle(.plain)
                     }
                 }
+                .padding(.horizontal, 16)
+                .background(
+                    ScrollEdgeFadeObserver(
+                        axis: .horizontal,
+                        fadeLength: 32.0,
+                        fadeThreshold: 10.0,
+                        onFadeChange: { leading, trailing in
+                            if abs(tabLeadingFade - leading) > 0.01 || abs(tabTrailingFade - trailing) > 0.01 {
+                                withAnimation(.easeInOut(duration: 0.10)) {
+                                    tabLeadingFade = leading
+                                    tabTrailingFade = trailing
+                                }
+                            }
+                        }
+                    )
+                )
             }
-            .padding(.leading, 10)
-            .padding(.trailing, 10)
-            .padding(.bottom, 2)
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .black.opacity(Double(1.0 - tabLeadingFade)), location: 0.0),
+                        .init(color: .black, location: 0.12),
+                        .init(color: .black, location: 0.78),
+                        .init(color: .black.opacity(Double(1.0 - tabTrailingFade)), location: 1.0)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .padding(.bottom, 4)
             
-            // Main Scrollable Floating Cards
+            // Main Scrollable Floating Cards with Dynamic Edge Fading
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 12) {
                     // 1. Apple Intelligence & Prompts
@@ -267,43 +303,30 @@ public struct MasterDockRootView: View {
                         }
                     }
                 }
-                .padding(.leading, 10)
-                .padding(.trailing, 10)
+                .padding(.horizontal, 16)
                 .padding(.top, 4)
-                .padding(.bottom, 24)
-            }
-            .mask(
-                LinearGradient(
-                    stops: [
-                        .init(color: .clear, location: 0.0),
-                        .init(color: .black, location: 0.04),
-                        .init(color: .black, location: 0.94),
-                        .init(color: .clear, location: 1.0)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
+                .padding(.bottom, 20)
+                .background(
+                    ScrollEdgeFadeObserver(fadeLength: 38.0, fadeThreshold: 16.0)
                 )
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            
+            // Bottom Floating Liquid Glass Bar (Matching macOS Notification Center bottom bar)
+            HStack(spacing: 8) {
+                GlassPillButton(title: "Edit Widgets", iconSystemName: "slider.horizontal.3") {
+                    onOpenSettings()
+                }
+                
+                GlassIconButton(
+                    iconSystemName: "xmark",
+                    size: 30,
+                    iconSize: 10,
+                    helpText: "Close Master Dock",
+                    action: onDismiss
+                )
+            }
+            .padding(.bottom, 12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(
-            ZStack {
-                // Real Apple Native Glass UI Backdrop
-                VisualEffectBlur(material: .hudWindow, blendingMode: .behindWindow, state: .active)
-                
-                // Subtle specular top lighting edge
-                LinearGradient(
-                    colors: [
-                        Color.white.opacity(0.06),
-                        Color.clear,
-                        Color.black.opacity(0.04)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            }
-            .ignoresSafeArea()
-        )
     }
 }

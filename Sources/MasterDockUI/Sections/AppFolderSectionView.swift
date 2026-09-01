@@ -1,4 +1,6 @@
 import SwiftUI
+import MasterDockCore
+import MasterDockServices
 
 public struct AppFolderSectionView: View {
     @ObservedObject public var appLauncher: AppLauncherService
@@ -29,19 +31,10 @@ public struct AppFolderSectionView: View {
                     }
                     .padding(.horizontal, 4)
                     .padding(.vertical, 4)
-                }
-                .mask(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0.0),
-                            .init(color: .black, location: 0.03),
-                            .init(color: .black, location: 0.97),
-                            .init(color: .clear, location: 1.0)
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
+                    .background(
+                        ScrollEdgeFadeObserver(axis: .horizontal, fadeLength: 20.0, fadeThreshold: 14.0)
                     )
-                )
+                }
             }
             
             // Favorite Folders

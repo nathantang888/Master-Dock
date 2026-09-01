@@ -1,4 +1,6 @@
 import SwiftUI
+import MasterDockCore
+import MasterDockServices
 
 public struct WidgetDrawerSectionView: View {
     @ObservedObject public var statsService: SystemStatsService

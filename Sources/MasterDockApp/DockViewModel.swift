@@ -1,6 +1,10 @@
 import Foundation
 import SwiftUI
 import Combine
+import MasterDockCore
+import MasterDockServices
+import MasterDockAI
+import MasterDockUI
 
 @MainActor
 public final class DockViewModel: ObservableObject {

@@ -75,7 +75,7 @@ let package = Package(
             path: "Sources/MasterDockApp"
         ),
         // Unit & Integration Test Suite
-        .testTarget(
+        .executableTarget(
             name: "MasterDockTests",
             dependencies: [
                 "MasterDockCore",

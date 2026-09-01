@@ -1,5 +1,8 @@
 import SwiftUI
 import AppKit
+import MasterDockCore
+import MasterDockServices
+import MasterDockAI
 
 /// Official Apple Intelligence Colorful Gradient Icon
 public struct AppleIntelligenceGlyph: View {
@@ -93,20 +96,11 @@ public struct AIChatSectionView: View {
                                 .padding(.leading, 4)
                             }
                         }
+                        .background(
+                            ScrollEdgeFadeObserver(fadeLength: 20.0, fadeThreshold: 14.0)
+                        )
                     }
                     .frame(maxHeight: 180)
-                    .mask(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .clear, location: 0.0),
-                                .init(color: .black, location: 0.05),
-                                .init(color: .black, location: 0.95),
-                                .init(color: .clear, location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
                     .onChange(of: conversation.count) { _, _ in
                         if let last = conversation.last {
                             withAnimation {
@@ -264,7 +258,6 @@ private struct ChatMessageBubble: View {
                     .background(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .fill(GlassTheme.accentBlue.opacity(0.85))
-                            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.ultraThinMaterial))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -374,7 +367,6 @@ public struct AIVoiceOverlayView: View {
                     
                     Circle()
                         .fill(GlassTheme.pillGlassFill)
-                        .background(Circle().fill(.ultraThinMaterial))
                         .frame(width: 74, height: 74)
                         .overlay(Circle().strokeBorder(GlassTheme.liquidSpecularBorder, lineWidth: 1.2))
                     
@@ -430,7 +422,6 @@ public struct AIVoiceOverlayView: View {
                                 .background(
                                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                                         .fill(GlassTheme.accentBlue.opacity(0.85))
-                                        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.ultraThinMaterial))
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -466,6 +457,9 @@ public struct AIVoiceOverlayView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .textSelection(.enabled)
                                 .padding(.vertical, 4)
+                                .background(
+                                    ScrollEdgeFadeObserver(fadeLength: 18.0, fadeThreshold: 15.0)
+                                )
                         }
                         .frame(maxHeight: 280)
                     }
@@ -473,7 +467,6 @@ public struct AIVoiceOverlayView: View {
                     .background(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .fill(Color.white.opacity(0.08))
-                            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(.ultraThinMaterial))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -503,13 +496,5 @@ public struct AIVoiceOverlayView: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: GlassTheme.dockRadius, style: .continuous)
-                .fill(Color.black.opacity(0.55))
-                .background(
-                    RoundedRectangle(cornerRadius: GlassTheme.dockRadius, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                )
-        )
     }
 }

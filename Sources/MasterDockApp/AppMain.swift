@@ -1,4 +1,5 @@
 import SwiftUI
+import MasterDockUI
 
 @main
 struct MasterDockMain: App {

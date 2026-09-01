@@ -1,14 +1,20 @@
 import SwiftUI
+import MasterDockCore
+import MasterDockServices
+import MasterDockAI
 
 public struct SettingsWindowView: View {
     @ObservedObject public var permissionManager = PermissionManager.shared
     
-    @AppStorage("dock_width") private var dockWidth: Double = 292.5
+    @AppStorage("dock_width") private var dockWidth: Double = 340.0
     @AppStorage("ai_provider") private var selectedProvider: String = AIProvider.appleIntelligence.rawValue
     @AppStorage("openai_key") private var openAIKey: String = ""
     @AppStorage("gemini_key") private var geminiKey: String = ""
     @AppStorage("ollama_host") private var ollamaHost: String = "http://localhost:11434"
     @AppStorage("launch_at_login") private var launchAtLogin: Bool = true
+    
+    @AppStorage("masterdock_preferred_media_source") private var preferredSource: String = MediaSource.spotify.rawValue
+    @ObservedObject public var mediaService = MediaService.shared
     
     public init() {}
     
@@ -20,25 +26,31 @@ public struct SettingsWindowView: View {
                     Label("Appearance", systemImage: "slider.horizontal.3")
                 }
             
-            // 2. General & Permissions Tab
+            // 2. Media & Music Tab
+            mediaSettingsTab
+                .tabItem {
+                    Label("Media & Music", systemImage: "music.note")
+                }
+            
+            // 3. General & Permissions Tab
             generalSettingsTab
                 .tabItem {
                     Label("General", systemImage: "gearshape")
                 }
             
-            // 3. Gestures & Shortcuts Tab
+            // 4. Gestures & Shortcuts Tab
             gesturesTab
                 .tabItem {
                     Label("Gestures", systemImage: "hand.tap.fill")
                 }
             
-            // 4. Apple Intelligence & AI Models Tab
+            // 5. Apple Intelligence & AI Models Tab
             aiSettingsTab
                 .tabItem {
                     Label("Intelligence", systemImage: "apple.intelligence")
                 }
         }
-        .frame(width: 540, height: 460)
+        .frame(width: 560, height: 490)
         .padding()
     }
     
@@ -259,6 +271,80 @@ public struct SettingsWindowView: View {
                 } else if selectedProvider == AIProvider.ollama.rawValue {
                     TextField("Local Ollama Host", text: $ollamaHost)
                         .textFieldStyle(.roundedBorder)
+                }
+            }
+            .padding(14)
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.05)))
+            
+            Spacer()
+        }
+        .padding()
+    }
+    
+    // MARK: - Media & Music Tab
+    private var mediaSettingsTab: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Music Services & Controller Setup")
+                .font(AppTypography.titleMedium)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Picker("Default Music Platform", selection: $preferredSource) {
+                    Text("Spotify").tag(MediaSource.spotify.rawValue)
+                    Text("Apple Music").tag(MediaSource.appleMusic.rawValue)
+                    Text("YouTube Music").tag(MediaSource.youtubeMusic.rawValue)
+                    Text("System Audio / Generic").tag(MediaSource.system.rawValue)
+                }
+                .pickerStyle(.menu)
+                .onChange(of: preferredSource) { _, newValue in
+                    if let source = MediaSource(rawValue: newValue) {
+                        mediaService.selectSource(source)
+                    }
+                }
+                
+                Text("Master Dock will automatically connect to this platform when launching playback or quick mixes.")
+                    .font(AppTypography.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(14)
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.05)))
+            
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Connected Music Services")
+                    .font(AppTypography.bodyBold)
+                
+                ForEach(mediaService.platforms) { platform in
+                    HStack(spacing: 10) {
+                        Image(systemName: platform.source.iconName)
+                            .font(.system(size: 14))
+                            .foregroundColor(platform.source.brandAccentColor)
+                            .frame(width: 24)
+                        
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(platform.source.rawValue)
+                                .font(AppTypography.bodyBold)
+                            Text(platform.isAppRunning ? "App Running & Scriptable" : (platform.isAppInstalled ? "App Installed" : "Web / Browser Integration"))
+                                .font(AppTypography.micro)
+                                .foregroundColor(platform.isAppRunning ? GlassTheme.accentEmerald : .secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        if platform.source == .youtubeMusic {
+                            Button("Open Web Player") {
+                                mediaService.openYouTubeMusic()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        } else if platform.isAppInstalled {
+                            Button(platform.isAppRunning ? "Connected" : "Launch") {
+                                mediaService.selectSource(platform.source)
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
+                    }
+                    .padding(8)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.03)))
                 }
             }
             .padding(14)

@@ -1,4 +1,6 @@
 import SwiftUI
+import MasterDockCore
+import MasterDockServices
 
 public struct ClipboardSectionView: View {
     @ObservedObject public var clipboardService: ClipboardMonitorService
@@ -65,7 +67,6 @@ public struct ClipboardSectionView: View {
                             .background(
                                 Capsule()
                                     .fill(selectedFilter == filter ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.9)) : AnyShapeStyle(GlassTheme.pillGlassFill))
-                                    .background(Capsule().fill(.ultraThinMaterial))
                             )
                             .overlay(
                                 Capsule()
@@ -114,20 +115,11 @@ public struct ClipboardSectionView: View {
                         }
                     }
                     .padding(.vertical, 4)
+                    .background(
+                        ScrollEdgeFadeObserver(fadeLength: 20.0, fadeThreshold: 14.0)
+                    )
                 }
                 .frame(maxHeight: 220)
-                .mask(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0.0),
-                            .init(color: .black, location: 0.04),
-                            .init(color: .black, location: 0.96),
-                            .init(color: .clear, location: 1.0)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
             }
         }
     }
@@ -210,16 +202,11 @@ private struct ClipboardItemRow: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(isRecentlyCopied ? AnyShapeStyle(GlassTheme.accentEmerald.opacity(0.15)) : (isHovered ? AnyShapeStyle(GlassTheme.liquidGlassHoverFill) : AnyShapeStyle(GlassTheme.pillGlassFill)))
-                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.ultraThinMaterial))
-            )
+            .liquidPillStyle(cornerRadius: 12, isHovered: isHovered)
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(isRecentlyCopied ? AnyShapeStyle(GlassTheme.accentEmerald.opacity(0.7)) : AnyShapeStyle(GlassTheme.subtleSpecularBorder), lineWidth: 0.8)
+                    .strokeBorder(isRecentlyCopied ? AnyShapeStyle(GlassTheme.accentEmerald.opacity(0.8)) : (isHovered ? AnyShapeStyle(GlassTheme.liquidSpecularHoverBorder) : AnyShapeStyle(GlassTheme.subtleSpecularBorder)), lineWidth: 0.65)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

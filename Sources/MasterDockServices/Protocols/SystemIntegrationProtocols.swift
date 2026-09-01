@@ -12,9 +12,29 @@ public protocol MediaServiceProtocol: AnyObject {
     var currentTrack: MediaTrack? { get }
     var isPlaying: Bool { get }
     var activeSource: MediaSource { get }
+    var playbackPosition: Double { get }
+    var trackDuration: Double { get }
+    var volume: Double { get }
+    var isShuffleEnabled: Bool { get }
+    var repeatMode: RepeatMode { get }
+    var isLiked: Bool { get }
+    var platforms: [MediaPlatformInfo] { get }
+    var playlists: [MediaPlaylist] { get }
+    
     func playPause()
     func nextTrack()
     func previousTrack()
+    func rewind(seconds: Double)
+    func fastForward(seconds: Double)
+    func seek(to position: Double)
+    func setVolume(_ newVolume: Double)
+    func toggleShuffle()
+    func cycleRepeatMode()
+    func toggleLiked()
+    func selectSource(_ source: MediaSource)
+    func refreshPlaylists()
+    func playPlaylist(_ playlist: MediaPlaylist)
+    func playTrackItem(_ item: MediaTrackItem)
 }
 
 public protocol CalendarServiceProtocol: AnyObject {

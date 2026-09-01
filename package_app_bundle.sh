@@ -56,7 +56,7 @@ cat << 'EOF' > "${CONTENTS_DIR}/Info.plist"
     <key>NSCalendarsUsageDescription</key>
     <string>Master Dock requires calendar access to display today's upcoming meetings.</string>
     <key>NSAppleEventsUsageDescription</key>
-    <string>Master Dock requires automation permissions to control Apple Music and Spotify playback.</string>
+    <string>Master Dock requires automation permissions to control Apple Music, Spotify, YouTube Music, and media playback.</string>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSSupportsAutomaticGraphicsSwitching</key>
@@ -65,10 +65,26 @@ cat << 'EOF' > "${CONTENTS_DIR}/Info.plist"
 </plist>
 EOF
 
-# Sign the bundle with persistent entitlements for TCC
+# Strip extended attributes and sign the bundle with persistent entitlements for TCC
+xattr -cr "${APP_DIR}" || true
+
 if [ -f "${WORKSPACE_DIR}/MasterDock.entitlements" ]; then
     echo "Signing MasterDock.app with entitlements..."
     codesign --force --deep --sign - --entitlements "${WORKSPACE_DIR}/MasterDock.entitlements" "${APP_DIR}"
+fi
+
+# Sync to /Applications if /Applications/MasterDock.app exists
+if [ -d "/Applications/MasterDock.app" ]; then
+    echo "Updating /Applications/MasterDock.app..."
+    rm -rf "/Applications/MasterDock.app"
+    cp -R "${APP_DIR}" "/Applications/MasterDock.app"
+fi
+
+# Sync to ~/Applications if ~/Applications/MasterDock.app exists
+if [ -d "${HOME}/Applications/MasterDock.app" ]; then
+    echo "Updating ${HOME}/Applications/MasterDock.app..."
+    rm -rf "${HOME}/Applications/MasterDock.app"
+    cp -R "${APP_DIR}" "${HOME}/Applications/MasterDock.app"
 fi
 
 echo "✅ Successfully packaged and signed Master Dock into ${APP_DIR}"

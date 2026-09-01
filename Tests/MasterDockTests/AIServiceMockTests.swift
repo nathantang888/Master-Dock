@@ -1,4 +1,5 @@
 import Foundation
+import MasterDockAI
 
 final class AIServiceMockTests {
     func testMockAIServiceStreaming() async throws {
