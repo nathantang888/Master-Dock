@@ -234,6 +234,18 @@ public struct MasterDockRootView: View {
                     )
                 )
             }
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .black.opacity(Double(1.0 - tabLeadingFade)), location: 0.0),
+                        .init(color: .black, location: 0.07),
+                        .init(color: .black, location: 0.85),
+                        .init(color: .black.opacity(Double(1.0 - tabTrailingFade)), location: 1.0)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
             .padding(.bottom, 4)
             
             // Main Scrollable Floating Cards with Dynamic Edge Fading
