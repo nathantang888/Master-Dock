@@ -47,7 +47,7 @@ public struct GlassButton: View {
             .background(
                 ZStack {
                     RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                        .fill(.regularMaterial)
+                        .fill(.thinMaterial)
                     RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
                         .fill(buttonFillStyle)
                     RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
@@ -101,10 +101,10 @@ public struct GlassIconButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(.regularMaterial)
+                    .fill(.thinMaterial)
                 
                 Circle()
-                    .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.80))
+                    .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.65))
                 
                 Circle()
                     .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
@@ -121,7 +121,7 @@ public struct GlassIconButton: View {
                 Circle()
                     .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.8)
             )
-            .shadow(color: isHovered ? (accentColor?.opacity(0.4) ?? Color.black.opacity(0.45)) : Color.black.opacity(0.30), radius: isHovered ? 6 : 3, x: 0, y: isHovered ? 2 : 1)
+            .shadow(color: isHovered ? (accentColor?.opacity(0.4) ?? Color.black.opacity(0.40)) : Color.black.opacity(0.25), radius: isHovered ? 6 : 3, x: 0, y: isHovered ? 2 : 1)
             .scaleEffect(isHovered ? 1.06 : 1.0)
         }
         .buttonStyle(.plain)
@@ -169,9 +169,9 @@ public struct GlassPillButton: View {
             .background(
                 ZStack {
                     Capsule()
-                        .fill(.regularMaterial)
+                        .fill(.thinMaterial)
                     Capsule()
-                        .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.80))
+                        .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.65))
                     Capsule()
                         .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
                     Capsule()
@@ -182,7 +182,7 @@ public struct GlassPillButton: View {
                 Capsule()
                     .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.8)
             )
-            .shadow(color: isHovered ? Color.black.opacity(0.50) : Color.black.opacity(0.35), radius: isHovered ? 8 : 4, x: 0, y: isHovered ? 3 : 2)
+            .shadow(color: isHovered ? Color.black.opacity(0.45) : Color.black.opacity(0.28), radius: isHovered ? 8 : 4, x: 0, y: isHovered ? 3 : 2)
             .scaleEffect(isHovered ? 1.03 : 1.0)
         }
         .buttonStyle(.plain)
@@ -246,7 +246,7 @@ public struct GlassSearchBar: View {
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                    .fill(.regularMaterial)
+                    .fill(.thinMaterial)
                 RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
                     .fill(searchFillStyle)
                 RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
