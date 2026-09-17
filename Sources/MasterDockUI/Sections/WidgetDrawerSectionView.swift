@@ -124,7 +124,7 @@ public struct CalendarSectionView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             SectionHeader(
-                title: "Today's Meetings",
+                title: "Todays Events",
                 iconSystemName: "calendar",
                 count: calendarService.todayEvents.count,
                 actionTitle: "Refresh",
@@ -136,7 +136,7 @@ public struct CalendarSectionView: View {
             )
             
             if calendarService.todayEvents.isEmpty {
-                Text("No meetings scheduled for today.")
+                Text("No events scheduled for today.")
                     .font(AppTypography.caption)
                     .foregroundColor(.white.opacity(0.65))
                     .padding(.vertical, 8)

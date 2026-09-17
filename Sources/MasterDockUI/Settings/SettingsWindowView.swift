@@ -153,7 +153,7 @@ public struct SettingsWindowView: View {
                 }
                 
                 PermissionRow(
-                    title: "Calendar Access (Today's Meetings)",
+                    title: "Calendar Access (Today's Events)",
                     isGranted: permissionManager.isCalendarGranted
                 ) {
                     permissionManager.requestCalendar()
