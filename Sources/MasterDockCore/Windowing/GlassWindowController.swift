@@ -25,7 +25,7 @@ public final class PureBackdropBlurView: NSView {
         }
     }
     
-    public var topFadeHeight: CGFloat = 70.0 {
+    public var topFadeHeight: CGFloat = 20.0 {
         didSet {
             lastMaskHeight = 0
             updateMaskImage()
@@ -230,7 +230,7 @@ public final class GlassWindowController: NSObject, ObservableObject {
         blurView.autoresizingMask = [.width, .height]
         blurView.blurRadius = 4.0
         blurView.fadeWidth = 42.0
-        blurView.topFadeHeight = 70.0
+        blurView.topFadeHeight = 20.0
         
         let hostingView = NSHostingView(rootView: rootView)
         hostingView.frame = containerView.bounds

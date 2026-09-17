@@ -126,15 +126,33 @@ public struct MasterDockRootView: View {
         VStack(spacing: 8) {
             // Clean Top Header Bar (Matching macOS Notification Center Header)
             HStack {
-                HStack(spacing: 8) {
+                HStack(spacing: 7) {
                     Image(systemName: "dock.rectangle")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundColor(GlassTheme.accentCyan)
+                        .shadow(color: GlassTheme.accentCyan.opacity(0.6), radius: 4, x: 0, y: 0)
                     
                     Text("Master Dock")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundColor(.white)
                 }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    ZStack {
+                        Capsule()
+                            .fill(.regularMaterial)
+                        Capsule()
+                            .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.80))
+                        Capsule()
+                            .fill(GlassTheme.liquidGlassSheen)
+                    }
+                )
+                .overlay(
+                    Capsule()
+                        .strokeBorder(GlassTheme.subtleSpecularBorder, lineWidth: 0.75)
+                )
+                .shadow(color: Color.black.opacity(0.35), radius: 4, x: 0, y: 1)
                 
                 Spacer()
                 
@@ -316,5 +334,16 @@ public struct MasterDockRootView: View {
             .padding(.bottom, 12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(
+            LinearGradient(
+                stops: [
+                    .init(color: Color.black.opacity(0.24), location: 0.0),
+                    .init(color: Color.black.opacity(0.08), location: 0.08),
+                    .init(color: Color.clear, location: 0.20)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
     }
 }
