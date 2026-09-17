@@ -65,11 +65,11 @@ public enum GlassTheme {
         endPoint: .bottomTrailing
     )
     
-    /// Translucent dock panel background gradient
+    /// Transparent dock panel background (uncolored liquid glass)
     public static let dockPanelFill = LinearGradient(
         stops: [
-            .init(color: Color.black.opacity(0.28), location: 0.0),
-            .init(color: Color(red: 0.06, green: 0.06, blue: 0.08).opacity(0.40), location: 1.0)
+            .init(color: Color.clear, location: 0.0),
+            .init(color: Color.clear, location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -210,38 +210,10 @@ public extension View {
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
     
-    /// Liquid glass panel background for the entire dock container
+    /// Liquid glass panel background for the entire dock container matching macOS Notification Center
     func liquidPanelBackground() -> some View {
         self
-            .background(
-                ZStack(alignment: .trailing) {
-                    // Base Native Ultra-Thin Vibrancy Blur
-                    VisualEffectBlur(
-                        material: .underWindowBackground,
-                        blendingMode: .behindWindow,
-                        state: .active,
-                        appearance: NSAppearance(named: .vibrantDark)
-                    )
-                    
-                    // Dark Translucent Liquid Tint
-                    GlassTheme.dockPanelFill
-                    
-                    // Top Subtle Sheen
-                    LinearGradient(
-                        stops: [
-                            .init(color: Color.white.opacity(0.06), location: 0.0),
-                            .init(color: Color.clear, location: 0.35)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    
-                    // Right Specular Rim Divider
-                    Rectangle()
-                        .fill(GlassTheme.dockEdgeDivider)
-                        .frame(width: 0.75)
-                }
-            )
+            .background(Color.clear)
     }
     
     /// Vibrant accent glow modifier

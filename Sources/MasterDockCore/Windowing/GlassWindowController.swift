@@ -4,10 +4,31 @@ import SwiftUI
 
 public final class PureBackdropBlurView: NSView {
     private var backdropLayer: CALayer?
+    private var blurFilter: NSObject?
+    private var lastMaskWidth: CGFloat = 0
+    private var lastMaskHeight: CGFloat = 0
     
-    public var blurRadius: CGFloat = 20.0 {
+    public override var isFlipped: Bool {
+        return true
+    }
+    
+    public var blurRadius: CGFloat = 4.0 {
         didSet {
             updateFilter()
+        }
+    }
+    
+    public var fadeWidth: CGFloat = 42.0 {
+        didSet {
+            lastMaskWidth = 0
+            updateMaskImage()
+        }
+    }
+    
+    public var topFadeHeight: CGFloat = 70.0 {
+        didSet {
+            lastMaskHeight = 0
+            updateMaskImage()
         }
     }
     
@@ -24,25 +45,112 @@ public final class PureBackdropBlurView: NSView {
     private func setupBackdrop() {
         self.wantsLayer = true
         self.layer?.backgroundColor = NSColor.clear.cgColor
+        self.layer?.isOpaque = false
         
         if let backdropClass = NSClassFromString("CABackdropLayer") as? CALayer.Type {
             let layer = backdropClass.init()
             layer.name = "pureBackdropBlur"
+            layer.setValue(true, forKey: "windowServerAware")
+            layer.setValue(true, forKey: "allowsSubstituteColor")
+            layer.setValue(false, forKey: "allowsInPlaceFiltering")
+            layer.setValue(true, forKey: "disablesOccludedBackdropBlurs")
+            layer.setValue(true, forKey: "ignoresOffscreenGroups")
             self.backdropLayer = layer
+            
             self.layer?.addSublayer(layer)
-            updateFilter()
+            createAndApplyFilter()
         }
     }
     
-    private func updateFilter() {
+    private func createAndApplyFilter() {
         guard let backdropLayer = backdropLayer,
               let filterClass = NSClassFromString("CAFilter") as? NSObject.Type else { return }
         
-        let filter = filterClass.perform(NSSelectorFromString("filterWithType:"), with: "gaussianBlur")?.takeUnretainedValue() as? NSObject
-        filter?.setValue(blurRadius, forKey: "inputRadius")
-        filter?.setValue(true, forKey: "inputNormalizeEdges")
-        if let filter = filter {
-            backdropLayer.setValue([filter], forKey: "filters")
+        let filter: NSObject?
+        if let vblur = filterClass.perform(NSSelectorFromString("filterWithType:"), with: "variableBlur")?.takeUnretainedValue() as? NSObject {
+            filter = vblur
+        } else if let gblur = filterClass.perform(NSSelectorFromString("filterWithType:"), with: "gaussianBlur")?.takeUnretainedValue() as? NSObject {
+            filter = gblur
+        } else {
+            filter = nil
+        }
+        
+        guard let filter = filter else { return }
+        self.blurFilter = filter
+        
+        filter.setValue(blurRadius, forKey: "inputRadius")
+        filter.setValue(true, forKey: "inputNormalizeEdges")
+        filter.setValue("default", forKey: "inputQuality")
+        
+        backdropLayer.setValue([filter], forKey: "filters")
+        lastMaskWidth = 0
+        lastMaskHeight = 0
+        updateMaskImage()
+    }
+    
+    private func updateFilter() {
+        blurFilter?.setValue(blurRadius, forKey: "inputRadius")
+    }
+    
+    private func updateMaskImage() {
+        guard let filter = blurFilter, bounds.width > 0, bounds.height > 0 else { return }
+        
+        let w = max(1, Int(bounds.width))
+        let h = max(1, Int(bounds.height))
+        if abs(lastMaskWidth - bounds.width) < 1.0 && abs(lastMaskHeight - bounds.height) < 1.0 {
+            return
+        }
+        lastMaskWidth = bounds.width
+        lastMaskHeight = bounds.height
+        
+        if fadeWidth <= 0 && topFadeHeight <= 0 {
+            filter.setValue(nil, forKey: "inputMaskImage")
+            return
+        }
+        
+        guard let context = CGContext(
+            data: nil,
+            width: w,
+            height: h,
+            bitsPerComponent: 8,
+            bytesPerRow: w * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return }
+        
+        // Match top-left flipped orientation
+        context.translateBy(x: 0, y: CGFloat(h))
+        context.scaleBy(x: 1.0, y: -1.0)
+        
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        
+        // Pass 1: Horizontal gradient (fade right edge to 0.0 blur)
+        let hColors = [
+            NSColor(red: 1, green: 1, blue: 1, alpha: 1.0).cgColor,
+            NSColor(red: 1, green: 1, blue: 1, alpha: 1.0).cgColor,
+            NSColor(red: 1, green: 1, blue: 1, alpha: 0.0).cgColor
+        ] as CFArray
+        let hSplit = max(0.0, min(1.0, CGFloat(w - Int(fadeWidth)) / CGFloat(w)))
+        if let hGrad = CGGradient(colorsSpace: colorSpace, colors: hColors, locations: [0.0, hSplit, 1.0]) {
+            context.drawLinearGradient(hGrad, start: .zero, end: CGPoint(x: w, y: 0), options: [])
+        }
+        
+        // Pass 2: Vertical gradient (fade top edge from 0.0 to 1.0 blur, matching Notification Center)
+        if topFadeHeight > 0 {
+            context.setBlendMode(.destinationIn)
+            let vColors = [
+                NSColor(red: 1, green: 1, blue: 1, alpha: 0.0).cgColor,
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1.0).cgColor,
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1.0).cgColor
+            ] as CFArray
+            let vSplit = max(0.0, min(1.0, topFadeHeight / CGFloat(h)))
+            if let vGrad = CGGradient(colorsSpace: colorSpace, colors: vColors, locations: [0.0, vSplit, 1.0]) {
+                context.drawLinearGradient(vGrad, start: .zero, end: CGPoint(x: 0, y: h), options: [])
+            }
+        }
+        
+        if let maskImage = context.makeImage() {
+            filter.setValue(maskImage, forKey: "inputMaskImage")
         }
     }
     
@@ -51,6 +159,7 @@ public final class PureBackdropBlurView: NSView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         backdropLayer?.frame = bounds
+        updateMaskImage()
         CATransaction.commit()
     }
 }
@@ -109,21 +218,19 @@ public final class GlassWindowController: NSObject, ObservableObject {
         )
         
         let panel = DockPanel(contentRect: initialRect)
+        panel.setValue(false, forKey: "shouldAutoFlattenLayerTree")
+        panel.setValue(false, forKey: "canHostLayersInWindowServer")
+        panel.setValue(true, forKey: "canHostLayersInWindowServer")
         
         let containerView = NSView(frame: NSRect(x: 0, y: 0, width: width, height: screenFrame.height))
         containerView.wantsLayer = true
         containerView.autoresizingMask = [.width, .height]
         
-        let visualEffectView = NSVisualEffectView(frame: containerView.bounds)
-        visualEffectView.material = .hudWindow
-        visualEffectView.blendingMode = .behindWindow
-        visualEffectView.state = .active
-        visualEffectView.appearance = NSAppearance(named: .vibrantDark)
-        visualEffectView.autoresizingMask = [.width, .height]
-        visualEffectView.wantsLayer = true
-        
         let blurView = PureBackdropBlurView(frame: containerView.bounds)
         blurView.autoresizingMask = [.width, .height]
+        blurView.blurRadius = 4.0
+        blurView.fadeWidth = 42.0
+        blurView.topFadeHeight = 70.0
         
         let hostingView = NSHostingView(rootView: rootView)
         hostingView.frame = containerView.bounds
@@ -132,7 +239,6 @@ public final class GlassWindowController: NSObject, ObservableObject {
         hostingView.layer?.backgroundColor = NSColor.clear.cgColor
         hostingView.layer?.isOpaque = false
         
-        containerView.addSubview(visualEffectView)
         containerView.addSubview(blurView)
         containerView.addSubview(hostingView)
         panel.contentView = containerView

@@ -32,24 +32,19 @@ public final class DockPanel: NSPanel {
         self.titleVisibility = .hidden
         self.titlebarAppearsTransparent = true
         self.isReleasedWhenClosed = false
-        self.hidesOnDeactivate = false
-        
-        enablePureWindowBlur(radius: 14)
     }
     
-    public func enablePureWindowBlur(radius: UInt32 = 14) {
+    public func enablePureWindowBlur(radius: UInt32 = 64) {
         let cid = CGSMainConnectionID()
         _ = CGSSetWindowBackgroundBlurRadius(cid, UInt32(self.windowNumber), radius)
     }
     
     public override func orderFront(_ sender: Any?) {
         super.orderFront(sender)
-        enablePureWindowBlur(radius: 14)
     }
     
     public override func makeKeyAndOrderFront(_ sender: Any?) {
         super.makeKeyAndOrderFront(sender)
-        enablePureWindowBlur(radius: 14)
     }
     
     public override var canBecomeKey: Bool {

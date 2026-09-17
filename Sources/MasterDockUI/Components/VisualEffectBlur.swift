@@ -9,11 +9,11 @@ public struct VisualEffectBlur: NSViewRepresentable {
     public var appearance: NSAppearance?
     
     public init(
-        material: NSVisualEffectView.Material = .popover,
+        material: NSVisualEffectView.Material = .fullScreenUI,
         blendingMode: NSVisualEffectView.BlendingMode = .behindWindow,
         state: NSVisualEffectView.State = .active,
         isEmphasized: Bool = false,
-        appearance: NSAppearance? = NSAppearance(named: .vibrantDark)
+        appearance: NSAppearance? = nil
     ) {
         self.material = material
         self.blendingMode = blendingMode
@@ -28,10 +28,7 @@ public struct VisualEffectBlur: NSViewRepresentable {
         view.blendingMode = blendingMode
         view.state = state
         view.isEmphasized = isEmphasized
-        if let app = appearance {
-            view.appearance = app
-        }
-        view.wantsLayer = true
+        view.appearance = appearance
         return view
     }
     
