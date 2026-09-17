@@ -334,16 +334,5 @@ public struct MasterDockRootView: View {
             .padding(.bottom, 12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(
-            LinearGradient(
-                stops: [
-                    .init(color: Color.black.opacity(0.24), location: 0.0),
-                    .init(color: Color.black.opacity(0.08), location: 0.08),
-                    .init(color: Color.clear, location: 0.20)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
     }
 }
