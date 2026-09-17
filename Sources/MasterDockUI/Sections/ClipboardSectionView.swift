@@ -61,12 +61,12 @@ public struct ClipboardSectionView: View {
                     Button(action: { selectedFilter = filter }) {
                         Text(filter.rawValue)
                             .font(AppTypography.captionBold)
-                            .foregroundColor(selectedFilter == filter ? .white : .white.opacity(0.65))
+                            .foregroundColor(selectedFilter == filter ? .white : .white.opacity(0.80))
                             .padding(.horizontal, 9)
                             .padding(.vertical, 5)
                             .background(
                                 Capsule()
-                                    .fill(selectedFilter == filter ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.9)) : AnyShapeStyle(GlassTheme.pillGlassFill))
+                                    .fill(selectedFilter == filter ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.9)) : AnyShapeStyle(Color(red: 0.20, green: 0.20, blue: 0.23).opacity(0.75)))
                             )
                             .overlay(
                                 Capsule()
@@ -84,10 +84,10 @@ public struct ClipboardSectionView: View {
                     VStack(spacing: 6) {
                         Image(systemName: "clipboard")
                             .font(.system(size: 22))
-                            .foregroundColor(.white.opacity(0.3))
+                            .foregroundColor(.white.opacity(0.45))
                         Text(searchText.isEmpty ? "No items in clipboard history" : "No matching items")
                             .font(AppTypography.caption)
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(.white.opacity(0.65))
                     }
                     .padding(.vertical, 20)
                     Spacer()
@@ -145,7 +145,7 @@ private struct ClipboardItemRow: View {
                     } else {
                         ZStack {
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.white.opacity(0.08))
+                                .fill(Color.white.opacity(0.12))
                                 .frame(width: 34, height: 34)
                             Image(systemName: iconName(for: item.type))
                                 .font(.system(size: 14))
@@ -163,7 +163,7 @@ private struct ClipboardItemRow: View {
                     
                     Text(item.previewSubtitle)
                         .font(AppTypography.caption)
-                        .foregroundColor(.white.opacity(0.55))
+                        .foregroundColor(.white.opacity(0.70))
                         .lineLimit(1)
                 }
                 
@@ -184,17 +184,17 @@ private struct ClipboardItemRow: View {
                         .padding(.vertical, 4)
                         .background(
                             Capsule()
-                                .fill(GlassTheme.accentEmerald.opacity(0.18))
+                                .fill(GlassTheme.accentEmerald.opacity(0.22))
                         )
                         .transition(.scale.combined(with: .opacity))
                     } else {
                         Image(systemName: "doc.on.doc")
                             .font(.system(size: 12))
-                            .foregroundColor(isHovered ? .white : .white.opacity(0.35))
+                            .foregroundColor(isHovered ? .white : .white.opacity(0.55))
                             .padding(6)
                             .background(
                                 Circle()
-                                    .fill(isHovered ? Color.white.opacity(0.12) : Color.clear)
+                                    .fill(isHovered ? Color.white.opacity(0.15) : Color.clear)
                             )
                             .help("Click card to copy")
                     }

@@ -28,7 +28,7 @@ public struct WidgetDrawerSectionView: View {
                         
                         Text(context.date.formatted(date: .abbreviated, time: .omitted))
                             .font(AppTypography.caption)
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(.white.opacity(0.75))
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -47,7 +47,7 @@ public struct WidgetDrawerSectionView: View {
                             .foregroundColor(.white)
                         Text(weatherService.currentWeather.condition)
                             .font(AppTypography.micro)
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(.white.opacity(0.75))
                             .lineLimit(1)
                     }
                 }
@@ -91,7 +91,7 @@ private struct StatMeter: View {
         HStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .stroke(Color.white.opacity(0.12), lineWidth: 3.5)
+                    .stroke(Color.white.opacity(0.18), lineWidth: 3.5)
                     .frame(width: 28, height: 28)
                 
                 Circle()
@@ -104,7 +104,7 @@ private struct StatMeter: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .font(AppTypography.micro)
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.75))
                 Text("\(Int(percentage))%")
                     .font(AppTypography.monoNumber)
                     .foregroundColor(.white)
@@ -138,7 +138,7 @@ public struct CalendarSectionView: View {
             if calendarService.todayEvents.isEmpty {
                 Text("No meetings scheduled for today.")
                     .font(AppTypography.caption)
-                    .foregroundColor(.white.opacity(0.5))
+                    .foregroundColor(.white.opacity(0.65))
                     .padding(.vertical, 8)
             } else {
                 VStack(spacing: 6) {
@@ -171,10 +171,10 @@ private struct MeetingCard: View {
                 HStack(spacing: 6) {
                     Text(meeting.timeRangeString)
                         .font(AppTypography.caption)
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(.white.opacity(0.75))
                     
                     Text("•")
-                        .foregroundColor(.white.opacity(0.3))
+                        .foregroundColor(.white.opacity(0.45))
                         .font(AppTypography.caption)
                     
                     Text(meeting.countdownStatus)

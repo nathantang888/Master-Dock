@@ -135,12 +135,16 @@ public struct MediaSectionView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
         .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.white.opacity(0.08))
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(.regularMaterial)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.65))
+            }
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(Color.white.opacity(searchQuery.isEmpty ? 0.12 : 0.35), lineWidth: 0.7)
+                .strokeBorder(Color.white.opacity(searchQuery.isEmpty ? 0.20 : 0.45), lineWidth: 0.75)
         )
     }
     

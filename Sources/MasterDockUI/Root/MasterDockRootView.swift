@@ -177,24 +177,24 @@ public struct MasterDockRootView: View {
                                 .font(AppTypography.captionBold)
                                 .lineLimit(1)
                                 .fixedSize(horizontal: true, vertical: false)
-                                .foregroundColor(selectedTab == tab ? .white : .white.opacity(0.75))
+                                .foregroundColor(selectedTab == tab ? .white : .white.opacity(0.85))
                                 .padding(.horizontal, 11)
                                 .padding(.vertical, 5)
                                 .background(
                                     ZStack {
                                         Capsule()
-                                            .fill(.ultraThinMaterial)
+                                            .fill(.regularMaterial)
                                         Capsule()
-                                            .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.85)) : AnyShapeStyle(GlassTheme.pillGlassFill))
+                                            .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.85)) : AnyShapeStyle(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.75)))
                                         Capsule()
                                             .fill(selectedTab == tab ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
                                     }
                                 )
                                 .overlay(
                                     Capsule()
-                                        .strokeBorder(selectedTab == tab ? AnyShapeStyle(Color.white.opacity(0.60)) : AnyShapeStyle(GlassTheme.subtleSpecularBorder), lineWidth: 0.65)
+                                        .strokeBorder(selectedTab == tab ? AnyShapeStyle(Color.white.opacity(0.60)) : AnyShapeStyle(GlassTheme.subtleSpecularBorder), lineWidth: 0.75)
                                 )
-                                .shadow(color: selectedTab == tab ? GlassTheme.accentBlue.opacity(0.40) : Color.clear, radius: 6, x: 0, y: 1)
+                                .shadow(color: selectedTab == tab ? GlassTheme.accentBlue.opacity(0.40) : Color.black.opacity(0.25), radius: selectedTab == tab ? 6 : 3, x: 0, y: 1)
                         }
                         .buttonStyle(.plain)
                     }

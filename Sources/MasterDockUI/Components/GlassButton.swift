@@ -47,7 +47,7 @@ public struct GlassButton: View {
             .background(
                 ZStack {
                     RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                        .fill(.ultraThinMaterial)
+                        .fill(.regularMaterial)
                     RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
                         .fill(buttonFillStyle)
                     RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
@@ -58,7 +58,7 @@ public struct GlassButton: View {
                 RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
                     .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.liquidSpecularBorder, lineWidth: 0.75)
             )
-            .shadow(color: accentColor?.opacity(0.4) ?? GlassTheme.ambientShadow, radius: isHovered ? 8 : 4, x: 0, y: isHovered ? 3 : 1)
+            .shadow(color: accentColor?.opacity(0.4) ?? Color.black.opacity(0.35), radius: isHovered ? 8 : 4, x: 0, y: isHovered ? 3 : 1)
             .scaleEffect(isPressed ? 0.96 : (isHovered ? 1.02 : 1.0))
         }
         .buttonStyle(.plain)
@@ -101,7 +101,10 @@ public struct GlassIconButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(.ultraThinMaterial)
+                    .fill(.regularMaterial)
+                
+                Circle()
+                    .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.80))
                 
                 Circle()
                     .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
@@ -111,14 +114,14 @@ public struct GlassIconButton: View {
                 
                 Image(systemName: iconSystemName)
                     .font(.system(size: iconSize, weight: .semibold))
-                    .foregroundColor(accentColor ?? (isHovered ? .white : .white.opacity(0.85)))
+                    .foregroundColor(accentColor ?? (isHovered ? .white : .white.opacity(0.90)))
             }
             .frame(width: size, height: size)
             .overlay(
                 Circle()
-                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.75)
+                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.8)
             )
-            .shadow(color: isHovered ? (accentColor?.opacity(0.4) ?? GlassTheme.ambientShadow) : Color.clear, radius: 6, x: 0, y: 2)
+            .shadow(color: isHovered ? (accentColor?.opacity(0.4) ?? Color.black.opacity(0.45)) : Color.black.opacity(0.30), radius: isHovered ? 6 : 3, x: 0, y: isHovered ? 2 : 1)
             .scaleEffect(isHovered ? 1.06 : 1.0)
         }
         .buttonStyle(.plain)
@@ -159,14 +162,16 @@ public struct GlassPillButton: View {
                 }
                 Text(title)
                     .font(AppTypography.captionBold)
-                    .foregroundColor(isHovered ? .white : .white.opacity(0.90))
+                    .foregroundColor(isHovered ? .white : .white.opacity(0.95))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 7)
             .background(
                 ZStack {
                     Capsule()
-                        .fill(.ultraThinMaterial)
+                        .fill(.regularMaterial)
+                    Capsule()
+                        .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.80))
                     Capsule()
                         .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
                     Capsule()
@@ -175,9 +180,9 @@ public struct GlassPillButton: View {
             )
             .overlay(
                 Capsule()
-                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.75)
+                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.8)
             )
-            .shadow(color: isHovered ? Color.black.opacity(0.4) : Color.black.opacity(0.2), radius: isHovered ? 8 : 4, x: 0, y: isHovered ? 3 : 1)
+            .shadow(color: isHovered ? Color.black.opacity(0.50) : Color.black.opacity(0.35), radius: isHovered ? 8 : 4, x: 0, y: isHovered ? 3 : 2)
             .scaleEffect(isHovered ? 1.03 : 1.0)
         }
         .buttonStyle(.plain)
@@ -218,7 +223,7 @@ public struct GlassSearchBar: View {
     public var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(isFocused ? GlassTheme.accentCyan : .white.opacity(0.6))
+                .foregroundColor(isFocused ? GlassTheme.accentCyan : .white.opacity(0.70))
                 .font(.system(size: 12, weight: .medium))
             
             TextField(placeholder, text: $text)
@@ -230,7 +235,7 @@ public struct GlassSearchBar: View {
             if !text.isEmpty {
                 Button(action: { text = "" }) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.white.opacity(0.55))
+                        .foregroundColor(.white.opacity(0.65))
                         .font(.system(size: 12))
                 }
                 .buttonStyle(.plain)
@@ -241,7 +246,7 @@ public struct GlassSearchBar: View {
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(.regularMaterial)
                 RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
                     .fill(searchFillStyle)
                 RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
@@ -250,7 +255,7 @@ public struct GlassSearchBar: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                .strokeBorder(searchBorderStyle, lineWidth: isFocused ? 1.0 : 0.65)
+                .strokeBorder(searchBorderStyle, lineWidth: isFocused ? 1.0 : 0.75)
         )
         .shadow(color: isFocused ? GlassTheme.accentCyan.opacity(0.25) : Color.clear, radius: 6, x: 0, y: 1)
     }
