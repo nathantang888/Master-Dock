@@ -141,7 +141,7 @@ public struct MasterDockRootView: View {
                 .background(
                     ZStack {
                         Capsule()
-                            .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.38))
+                            .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.52))
                         Capsule()
                             .fill(GlassTheme.pillGlassFill)
                         Capsule()
@@ -201,7 +201,7 @@ public struct MasterDockRootView: View {
                                 .background(
                                     ZStack {
                                         Capsule()
-                                            .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.85)) : AnyShapeStyle(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.38)))
+                                            .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.85)) : AnyShapeStyle(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.50)))
                                         Capsule()
                                             .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.liquidGlassHoverSheen) : AnyShapeStyle(GlassTheme.pillGlassFill))
                                         Capsule()

@@ -6,8 +6,8 @@ public enum GlassTheme {
     /// Translucent liquid glass fill for main cards (matching macOS Notification Center transparency)
     public static let liquidGlassFill = LinearGradient(
         stops: [
-            .init(color: Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.32), location: 0.0),
-            .init(color: Color(red: 0.09, green: 0.09, blue: 0.11).opacity(0.44), location: 1.0)
+            .init(color: Color(red: 0.14, green: 0.14, blue: 0.17).opacity(0.55), location: 0.0),
+            .init(color: Color(red: 0.07, green: 0.07, blue: 0.09).opacity(0.68), location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -16,8 +16,8 @@ public enum GlassTheme {
     /// Brightened liquid glass fill on hover
     public static let liquidGlassHoverFill = LinearGradient(
         stops: [
-            .init(color: Color(red: 0.22, green: 0.22, blue: 0.26).opacity(0.40), location: 0.0),
-            .init(color: Color(red: 0.13, green: 0.13, blue: 0.16).opacity(0.52), location: 1.0)
+            .init(color: Color(red: 0.19, green: 0.19, blue: 0.23).opacity(0.62), location: 0.0),
+            .init(color: Color(red: 0.10, green: 0.10, blue: 0.13).opacity(0.74), location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing

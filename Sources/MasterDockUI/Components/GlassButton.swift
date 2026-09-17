@@ -99,7 +99,7 @@ public struct GlassIconButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(isHovered ? 0.48 : 0.35))
+                    .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(isHovered ? 0.65 : 0.52))
                 
                 Circle()
                     .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
@@ -164,7 +164,7 @@ public struct GlassPillButton: View {
             .background(
                 ZStack {
                     Capsule()
-                        .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(isHovered ? 0.48 : 0.35))
+                        .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(isHovered ? 0.65 : 0.52))
                     Capsule()
                         .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
                     Capsule()
