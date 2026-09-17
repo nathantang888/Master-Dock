@@ -137,9 +137,9 @@ public struct MediaSectionView: View {
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.regularMaterial)
+                    .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.35))
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.65))
+                    .fill(GlassTheme.pillSheen)
             }
         )
         .overlay(

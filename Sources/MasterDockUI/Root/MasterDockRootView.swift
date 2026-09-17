@@ -141,18 +141,18 @@ public struct MasterDockRootView: View {
                 .background(
                     ZStack {
                         Capsule()
-                            .fill(.thinMaterial)
+                            .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.38))
                         Capsule()
-                            .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.68))
+                            .fill(GlassTheme.pillGlassFill)
                         Capsule()
-                            .fill(GlassTheme.liquidGlassSheen)
+                            .fill(GlassTheme.pillSheen)
                     }
                 )
                 .overlay(
                     Capsule()
                         .strokeBorder(GlassTheme.subtleSpecularBorder, lineWidth: 0.75)
                 )
-                .shadow(color: Color.black.opacity(0.28), radius: 4, x: 0, y: 1)
+                .shadow(color: Color.black.opacity(0.20), radius: 4, x: 0, y: 1)
                 
                 Spacer()
                 
@@ -201,18 +201,18 @@ public struct MasterDockRootView: View {
                                 .background(
                                     ZStack {
                                         Capsule()
-                                            .fill(.thinMaterial)
+                                            .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.85)) : AnyShapeStyle(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.38)))
                                         Capsule()
-                                            .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.85)) : AnyShapeStyle(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.65)))
+                                            .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.liquidGlassHoverSheen) : AnyShapeStyle(GlassTheme.pillGlassFill))
                                         Capsule()
-                                            .fill(selectedTab == tab ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
+                                            .fill(selectedTab == tab ? GlassTheme.liquidGlassHoverSheen : GlassTheme.pillSheen)
                                     }
                                 )
                                 .overlay(
                                     Capsule()
                                         .strokeBorder(selectedTab == tab ? AnyShapeStyle(Color.white.opacity(0.60)) : AnyShapeStyle(GlassTheme.subtleSpecularBorder), lineWidth: 0.75)
                                 )
-                                .shadow(color: selectedTab == tab ? GlassTheme.accentBlue.opacity(0.40) : Color.black.opacity(0.20), radius: selectedTab == tab ? 6 : 3, x: 0, y: 1)
+                                .shadow(color: selectedTab == tab ? GlassTheme.accentBlue.opacity(0.40) : Color.black.opacity(0.15), radius: selectedTab == tab ? 6 : 3, x: 0, y: 1)
                         }
                         .buttonStyle(.plain)
                     }

@@ -47,8 +47,6 @@ public struct GlassButton: View {
             .background(
                 ZStack {
                     RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                        .fill(.thinMaterial)
-                    RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
                         .fill(buttonFillStyle)
                     RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
                         .fill(isHovered ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
@@ -101,16 +99,13 @@ public struct GlassIconButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(.thinMaterial)
-                
-                Circle()
-                    .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.65))
+                    .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(isHovered ? 0.48 : 0.35))
                 
                 Circle()
                     .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
                 
                 Circle()
-                    .fill(isHovered ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
+                    .fill(isHovered ? GlassTheme.pillHoverSheen : GlassTheme.pillSheen)
                 
                 Image(systemName: iconSystemName)
                     .font(.system(size: iconSize, weight: .semibold))
@@ -169,13 +164,11 @@ public struct GlassPillButton: View {
             .background(
                 ZStack {
                     Capsule()
-                        .fill(.thinMaterial)
-                    Capsule()
-                        .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.65))
+                        .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(isHovered ? 0.48 : 0.35))
                     Capsule()
                         .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
                     Capsule()
-                        .fill(isHovered ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
+                        .fill(isHovered ? GlassTheme.pillHoverSheen : GlassTheme.pillSheen)
                 }
             )
             .overlay(
@@ -246,11 +239,9 @@ public struct GlassSearchBar: View {
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                    .fill(.thinMaterial)
-                RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
                     .fill(searchFillStyle)
                 RoundedRectangle(cornerRadius: GlassTheme.pillRadius, style: .continuous)
-                    .fill(GlassTheme.liquidGlassSheen)
+                    .fill(GlassTheme.pillSheen)
             }
         )
         .overlay(

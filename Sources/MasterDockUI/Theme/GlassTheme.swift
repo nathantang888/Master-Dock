@@ -6,8 +6,8 @@ public enum GlassTheme {
     /// Translucent liquid glass fill for main cards (matching macOS Notification Center transparency)
     public static let liquidGlassFill = LinearGradient(
         stops: [
-            .init(color: Color(red: 0.14, green: 0.14, blue: 0.16).opacity(0.40), location: 0.0),
-            .init(color: Color(red: 0.08, green: 0.08, blue: 0.10).opacity(0.50), location: 1.0)
+            .init(color: Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.32), location: 0.0),
+            .init(color: Color(red: 0.09, green: 0.09, blue: 0.11).opacity(0.44), location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -16,8 +16,8 @@ public enum GlassTheme {
     /// Brightened liquid glass fill on hover
     public static let liquidGlassHoverFill = LinearGradient(
         stops: [
-            .init(color: Color(red: 0.18, green: 0.18, blue: 0.22).opacity(0.48), location: 0.0),
-            .init(color: Color(red: 0.11, green: 0.11, blue: 0.13).opacity(0.58), location: 1.0)
+            .init(color: Color(red: 0.22, green: 0.22, blue: 0.26).opacity(0.40), location: 0.0),
+            .init(color: Color(red: 0.13, green: 0.13, blue: 0.16).opacity(0.52), location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -26,8 +26,8 @@ public enum GlassTheme {
     /// Top specular sheen reflection simulating 3D light reflection across curved glass
     public static let liquidGlassSheen = LinearGradient(
         stops: [
-            .init(color: Color.white.opacity(0.18), location: 0.0),
-            .init(color: Color.white.opacity(0.06), location: 0.22),
+            .init(color: Color.white.opacity(0.15), location: 0.0),
+            .init(color: Color.white.opacity(0.04), location: 0.22),
             .init(color: Color.clear, location: 0.60)
         ],
         startPoint: .top,
@@ -37,9 +37,9 @@ public enum GlassTheme {
     /// Enhanced top sheen on hover
     public static let liquidGlassHoverSheen = LinearGradient(
         stops: [
-            .init(color: Color.white.opacity(0.26), location: 0.0),
-            .init(color: Color.white.opacity(0.08), location: 0.30),
-            .init(color: Color.clear, location: 0.75)
+            .init(color: Color.white.opacity(0.22), location: 0.0),
+            .init(color: Color.white.opacity(0.06), location: 0.28),
+            .init(color: Color.clear, location: 0.70)
         ],
         startPoint: .top,
         endPoint: .bottom
@@ -48,8 +48,8 @@ public enum GlassTheme {
     /// Translucent pill / control glass fill
     public static let pillGlassFill = LinearGradient(
         stops: [
-            .init(color: Color.white.opacity(0.10), location: 0.0),
-            .init(color: Color.white.opacity(0.04), location: 1.0)
+            .init(color: Color.white.opacity(0.08), location: 0.0),
+            .init(color: Color.white.opacity(0.03), location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -58,11 +58,31 @@ public enum GlassTheme {
     /// Hover pill glass fill
     public static let pillGlassHoverFill = LinearGradient(
         stops: [
-            .init(color: Color.white.opacity(0.20), location: 0.0),
-            .init(color: Color.white.opacity(0.10), location: 1.0)
+            .init(color: Color.white.opacity(0.16), location: 0.0),
+            .init(color: Color.white.opacity(0.07), location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
+    )
+    
+    /// Delicate top sheen for inner pills & controls
+    public static let pillSheen = LinearGradient(
+        stops: [
+            .init(color: Color.white.opacity(0.08), location: 0.0),
+            .init(color: Color.clear, location: 0.50)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+    
+    /// Enhanced delicate top sheen on hover for pills
+    public static let pillHoverSheen = LinearGradient(
+        stops: [
+            .init(color: Color.white.opacity(0.14), location: 0.0),
+            .init(color: Color.clear, location: 0.60)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
     )
     
     /// Transparent dock panel background (uncolored liquid glass)
@@ -158,20 +178,16 @@ public enum GlassTheme {
 }
 
 public extension View {
-    /// Multi-layer liquid glass card modifier with vibrancy, dark tint, top sheen, 3D specular rim, and ambient drop shadows
+    /// Multi-layer liquid glass card modifier with dark translucent tint, top sheen, 3D specular rim, and ambient drop shadows matching macOS Notification Center
     func liquidGlassCard(cornerRadius: CGFloat = GlassTheme.cardRadius, isHovered: Bool = false) -> some View {
         self
             .background(
                 ZStack {
-                    // 1. Native Frosted Vibrancy Blur (thinMaterial lets background colors shine through translucent glass)
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(.thinMaterial)
-                    
-                    // 2. Translucent Liquid Glass Tint Gradient
+                    // 1. Translucent Liquid Glass Tint Gradient (allows backdrop blur to shine through)
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .fill(isHovered ? GlassTheme.liquidGlassHoverFill : GlassTheme.liquidGlassFill)
                     
-                    // 3. Specular Top Sheen (Simulating light hitting curved top)
+                    // 2. Specular Top Sheen (Simulating light hitting curved top)
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .fill(isHovered ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
                 }
@@ -181,7 +197,7 @@ public extension View {
                     .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.liquidSpecularBorder, lineWidth: 0.80)
             )
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .shadow(color: isHovered ? GlassTheme.hoverShadow : GlassTheme.ambientShadow, radius: isHovered ? 14 : 9, x: 0, y: isHovered ? 5 : 3)
+            .shadow(color: isHovered ? GlassTheme.hoverShadow : GlassTheme.ambientShadow, radius: isHovered ? 12 : 8, x: 0, y: isHovered ? 4 : 2)
             .shadow(color: GlassTheme.contactShadow, radius: 2, x: 0, y: 1)
     }
     
@@ -196,7 +212,7 @@ public extension View {
                     
                     // 2. Delicate Top Sheen
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(isHovered ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
+                        .fill(isHovered ? GlassTheme.pillHoverSheen : GlassTheme.pillSheen)
                 }
             )
             .overlay(
