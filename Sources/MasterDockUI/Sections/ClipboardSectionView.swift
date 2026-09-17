@@ -66,7 +66,7 @@ public struct ClipboardSectionView: View {
                             .padding(.vertical, 5)
                             .background(
                                 Capsule()
-                                    .fill(selectedFilter == filter ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.9)) : AnyShapeStyle(Color(red: 0.20, green: 0.20, blue: 0.23).opacity(0.75)))
+                                    .fill(selectedFilter == filter ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.85)) : AnyShapeStyle(GlassTheme.pillGlassFill))
                             )
                             .overlay(
                                 Capsule()

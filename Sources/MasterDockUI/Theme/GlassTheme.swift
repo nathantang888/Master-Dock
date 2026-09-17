@@ -3,11 +3,11 @@ import SwiftUI
 public enum GlassTheme {
     // MARK: - Liquid Glass Morphism Fills (Matching macOS Notification Center & Control Center)
     
-    /// Translucent liquid glass fill for main cards (translucent liquid glass allowing background colors to shine through)
+    /// Translucent liquid glass fill for main cards (matching macOS Notification Center transparency)
     public static let liquidGlassFill = LinearGradient(
         stops: [
-            .init(color: Color(red: 0.15, green: 0.15, blue: 0.17).opacity(0.68), location: 0.0),
-            .init(color: Color(red: 0.09, green: 0.09, blue: 0.11).opacity(0.74), location: 1.0)
+            .init(color: Color(red: 0.14, green: 0.14, blue: 0.16).opacity(0.40), location: 0.0),
+            .init(color: Color(red: 0.08, green: 0.08, blue: 0.10).opacity(0.50), location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -16,8 +16,8 @@ public enum GlassTheme {
     /// Brightened liquid glass fill on hover
     public static let liquidGlassHoverFill = LinearGradient(
         stops: [
-            .init(color: Color(red: 0.20, green: 0.20, blue: 0.23).opacity(0.75), location: 0.0),
-            .init(color: Color(red: 0.13, green: 0.13, blue: 0.15).opacity(0.80), location: 1.0)
+            .init(color: Color(red: 0.18, green: 0.18, blue: 0.22).opacity(0.48), location: 0.0),
+            .init(color: Color(red: 0.11, green: 0.11, blue: 0.13).opacity(0.58), location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -48,8 +48,8 @@ public enum GlassTheme {
     /// Translucent pill / control glass fill
     public static let pillGlassFill = LinearGradient(
         stops: [
-            .init(color: Color.white.opacity(0.12), location: 0.0),
-            .init(color: Color.white.opacity(0.06), location: 1.0)
+            .init(color: Color.white.opacity(0.10), location: 0.0),
+            .init(color: Color.white.opacity(0.04), location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -58,8 +58,8 @@ public enum GlassTheme {
     /// Hover pill glass fill
     public static let pillGlassHoverFill = LinearGradient(
         stops: [
-            .init(color: Color.white.opacity(0.22), location: 0.0),
-            .init(color: Color.white.opacity(0.12), location: 1.0)
+            .init(color: Color.white.opacity(0.20), location: 0.0),
+            .init(color: Color.white.opacity(0.10), location: 1.0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -80,9 +80,9 @@ public enum GlassTheme {
     /// 3D specular highlight border for primary liquid glass cards (continuous perimeter outline)
     public static let liquidSpecularBorder = LinearGradient(
         stops: [
-            .init(color: Color.white.opacity(0.40), location: 0.0),
+            .init(color: Color.white.opacity(0.42), location: 0.0),
             .init(color: Color.white.opacity(0.22), location: 0.28),
-            .init(color: Color.white.opacity(0.12), location: 0.70),
+            .init(color: Color.white.opacity(0.10), location: 0.70),
             .init(color: Color.white.opacity(0.24), location: 1.0)
         ],
         startPoint: .topLeading,
@@ -151,9 +151,9 @@ public enum GlassTheme {
     public static let smallPillRadius: CGFloat = 8.0
     
     // MARK: - Ambient Shadows
-    public static let ambientShadow = Color.black.opacity(0.40)
-    public static let contactShadow = Color.black.opacity(0.20)
-    public static let hoverShadow = Color.black.opacity(0.52)
+    public static let ambientShadow = Color.black.opacity(0.38)
+    public static let contactShadow = Color.black.opacity(0.18)
+    public static let hoverShadow = Color.black.opacity(0.50)
     public static let specularGlow = Color.white.opacity(0.14)
 }
 
@@ -178,10 +178,10 @@ public extension View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.liquidSpecularBorder, lineWidth: 0.85)
+                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.liquidSpecularBorder, lineWidth: 0.80)
             )
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .shadow(color: isHovered ? GlassTheme.hoverShadow : GlassTheme.ambientShadow, radius: isHovered ? 15 : 10, x: 0, y: isHovered ? 6 : 4)
+            .shadow(color: isHovered ? GlassTheme.hoverShadow : GlassTheme.ambientShadow, radius: isHovered ? 14 : 9, x: 0, y: isHovered ? 5 : 3)
             .shadow(color: GlassTheme.contactShadow, radius: 2, x: 0, y: 1)
     }
     
@@ -190,22 +190,18 @@ public extension View {
         self
             .background(
                 ZStack {
-                    // 1. Native Vibrancy Material
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(.thinMaterial)
-                    
-                    // 2. Translucent Glass Fill
+                    // 1. Translucent Glass Chip Fill (allows card transparency to shine through)
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
                     
-                    // 3. Delicate Top Sheen
+                    // 2. Delicate Top Sheen
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .fill(isHovered ? GlassTheme.liquidGlassHoverSheen : GlassTheme.liquidGlassSheen)
                 }
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.75)
+                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.65)
             )
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
