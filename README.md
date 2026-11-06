@@ -87,10 +87,11 @@ You can turn shortcuts off by right clicking the Master Dock icon in the menu ba
 
 ## Install
 
-### Download
-1. Download **MasterDock.app** from this repo and move it to your Applications folder.
-2. The first time, **right click it and choose Open**. macOS asks this because the app isn't from the App Store yet.
-3. A short welcome screen walks you through the rest.
+### Download (Apple silicon Macs)
+1. Click the green **Code** button above, then **Download ZIP**, and unzip it.
+2. Move **MasterDock.app** from the folder into your Applications folder and open it.
+3. macOS will say it can't check the app, because it isn't from the App Store yet. Open **System Settings > Privacy & Security**, scroll down and click **Open Anyway**. You only do this once.
+4. A short welcome screen walks you through the rest.
 
 ### Build it yourself
 You need macOS 14 or newer and Xcode command line tools. Apple Intelligence needs an Apple silicon Mac on macOS 26.
