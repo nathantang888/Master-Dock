@@ -23,7 +23,7 @@ It is built to feel like part of macOS. The cards use Apple's Liquid Glass, the 
 
 ## Features
 
-### 🤖 Apple Intelligence, built in
+### Apple Intelligence, built in
 Chat with Apple's on device AI. Nothing leaves your Mac.
 
 * **Three modes:** General for normal questions, Personal where it learns your name and how you like answers, and Computer where it can see what's on your dock, the app you're in, or text you've highlighted. It only sees what you allow.
@@ -31,20 +31,20 @@ Chat with Apple's on device AI. Nothing leaves your Mac.
 * **Voice mode:** swipe farther, or press **⌥⇧⌘Space**, and just talk.
 * **Quick actions:** summarize, fix grammar, explain code and more in one click.
 
-### 🎵 Music
+### Music
 Control Spotify or Apple Music: play, skip, scrub, like, search and playlists.
 
-### 📅 Calendar
+### Calendar
 * See today's events from iCloud and every Google account on your Mac, all in one list.
 * Add events by just typing, like *"Study session Friday 4pm for 2 hours"*. They save to your real calendar and sync to your phone.
 * A **Join** button shows up only when an event has a real Zoom, Meet, Teams, Webex or FaceTime link.
 
-### 📋 Clipboard history
+### Clipboard history
 * **Pin** things you paste a lot, like prompts, so they stay at the top.
 * Delete one item at a time, or clear everything except your pins.
 * **Private by default:** it asks before saving anything, and it skips passwords copied from password managers.
 
-### 🧩 Make it yours
+### Make it yours
 
 <img src="docs/screenshots/edit-mode.png" alt="Edit mode with move and hide controls above each card" width="420" align="right">
 
@@ -55,7 +55,7 @@ Control Spotify or Apple Music: play, skip, scrub, like, search and playlists.
 
 <br clear="right">
 
-### 🛠 Everyday tools
+### Everyday tools
 
 <p>
   <img src="docs/screenshots/apps.png" alt="Favorite apps and quick folders" width="49%">
