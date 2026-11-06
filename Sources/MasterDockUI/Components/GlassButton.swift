@@ -59,7 +59,7 @@ public struct GlassButton: View {
             .shadow(color: accentColor?.opacity(0.4) ?? Color.black.opacity(0.35), radius: isHovered ? 8 : 4, x: 0, y: isHovered ? 3 : 1)
             .scaleEffect(isPressed ? 0.96 : (isHovered ? 1.02 : 1.0))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .onHover { hovering in
             withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
                 self.isHovered = hovering
@@ -97,35 +97,16 @@ public struct GlassIconButton: View {
     
     public var body: some View {
         Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(isHovered ? 0.65 : 0.52))
-                
-                Circle()
-                    .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
-                
-                Circle()
-                    .fill(isHovered ? GlassTheme.pillHoverSheen : GlassTheme.pillSheen)
-                
-                Image(systemName: iconSystemName)
-                    .font(.system(size: iconSize, weight: .semibold))
-                    .foregroundColor(accentColor ?? (isHovered ? .white : .white.opacity(0.90)))
-            }
-            .frame(width: size, height: size)
-            .overlay(
-                Circle()
-                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.8)
-            )
-            .shadow(color: isHovered ? (accentColor?.opacity(0.4) ?? Color.black.opacity(0.40)) : Color.black.opacity(0.25), radius: isHovered ? 6 : 3, x: 0, y: isHovered ? 2 : 1)
-            .scaleEffect(isHovered ? 1.06 : 1.0)
+            Image(systemName: iconSystemName)
+                .font(.system(size: iconSize, weight: .semibold))
+                .foregroundColor(accentColor ?? .white.opacity(0.92))
+                .frame(width: size, height: size)
+                .contentShape(Circle())
+                // Real Liquid Glass circle: lensing, rim highlight, built-in hover/press response.
+                .liquidGlassControl(Circle(), tint: accentColor?.opacity(0.35))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .help(helpText ?? "")
-        .onHover { hovering in
-            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
-                self.isHovered = hovering
-            }
-        }
     }
 }
 
@@ -157,33 +138,15 @@ public struct GlassPillButton: View {
                 }
                 Text(title)
                     .font(AppTypography.captionBold)
-                    .foregroundColor(isHovered ? .white : .white.opacity(0.95))
+                    .foregroundColor(.white.opacity(0.95))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 7)
-            .background(
-                ZStack {
-                    Capsule()
-                        .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(isHovered ? 0.65 : 0.52))
-                    Capsule()
-                        .fill(isHovered ? GlassTheme.pillGlassHoverFill : GlassTheme.pillGlassFill)
-                    Capsule()
-                        .fill(isHovered ? GlassTheme.pillHoverSheen : GlassTheme.pillSheen)
-                }
-            )
-            .overlay(
-                Capsule()
-                    .strokeBorder(isHovered ? GlassTheme.liquidSpecularHoverBorder : GlassTheme.subtleSpecularBorder, lineWidth: 0.8)
-            )
-            .shadow(color: isHovered ? Color.black.opacity(0.45) : Color.black.opacity(0.28), radius: isHovered ? 8 : 4, x: 0, y: isHovered ? 3 : 2)
-            .scaleEffect(isHovered ? 1.03 : 1.0)
+            .contentShape(Capsule())
+            // Real Liquid Glass capsule, like Notification Center's "Edit Widgets".
+            .liquidGlassControl(Capsule())
         }
-        .buttonStyle(.plain)
-        .onHover { hovering in
-            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
-                self.isHovered = hovering
-            }
-        }
+        .buttonStyle(.pressable)
     }
 }
 
@@ -231,7 +194,7 @@ public struct GlassSearchBar: View {
                         .foregroundColor(.white.opacity(0.65))
                         .font(.system(size: 12))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
             }
         }
         .padding(.horizontal, 12)
@@ -258,6 +221,7 @@ public struct SectionHeader: View {
     public var count: Int?
     public var actionTitle: String?
     public var onAction: (() -> Void)?
+    @Environment(\.dockCardKind) private var cardKind
     
     public init(
         title: String,
@@ -279,9 +243,14 @@ public struct SectionHeader: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(GlassTheme.accentCyan)
             
-            Text(title)
-                .font(AppTypography.bodyBold)
-                .foregroundColor(.white)
+            // The card's main title can be renamed (double-click); other headers stay fixed.
+            if let kind = cardKind, kind.defaultTitle == title {
+                DockCardTitle(title, font: AppTypography.bodyBold)
+            } else {
+                Text(title)
+                    .font(AppTypography.bodyBold)
+                    .foregroundColor(.white)
+            }
             
             if let count = count {
                 Text("\(count)")
@@ -295,7 +264,7 @@ public struct SectionHeader: View {
                     )
                     .overlay(
                         Capsule()
-                            .strokeBorder(Color.white.opacity(0.2), lineWidth: 0.5)
+                            .strokeBorder(Color.white.opacity(0.06), lineWidth: 0.5)
                     )
             }
             
@@ -307,7 +276,7 @@ public struct SectionHeader: View {
                         .font(AppTypography.captionBold)
                         .foregroundColor(GlassTheme.accentCyan)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
             }
         }
     }

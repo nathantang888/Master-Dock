@@ -37,6 +37,11 @@ public final class DockViewModel: ObservableObject {
     @Published public var isAIStreaming: Bool = false
     
     private var cancellables = Set<AnyCancellable>()
+    
+    // AI modes and memory
+    public let aiSettings = AIAssistantSettings.shared
+    public let aiMemory = AIMemoryStore.shared
+    private let appTracker = FrontmostAppTracker.shared
     private var aiService: AIServiceProtocol = AppleIntelligenceService()
     
     public init() {
@@ -81,8 +86,9 @@ public final class DockViewModel: ObservableObject {
     }
     
     private func bindGestureEngine() {
+        // currentState is already published on the main thread, so skip the extra
+        // .receive(on:) hop that added a frame of delay to every swipe update.
         multitouchManager.$currentState
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 self?.handleGestureState(state)
             }
@@ -194,20 +200,25 @@ public final class DockViewModel: ObservableObject {
     public func sendAIMessage(_ text: String) {
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         
+        let previousMessages = conversationHistory
         let userMessage = AIMessage(role: .user, content: text)
         conversationHistory.append(userMessage)
         
         let assistantMessageID = UUID()
-        let assistantMessage = AIMessage(id: assistantMessageID, role: .assistant, content: "")
-        conversationHistory.append(assistantMessage)
+        conversationHistory.append(AIMessage(id: assistantMessageID, role: .assistant, content: ""))
         
         isAIStreaming = true
         updateAIService()
+        let instructions = aiSettings.modeInstructions()
+        let context = buildAIContext(for: text)
+        let rememberThis = aiSettings.memoryEnabled && aiSettings.memoryConsentGiven
         
         Task {
+            var reply = ""
             do {
-                let stream = aiService.sendMessageStream(prompt: text, conversationHistory: conversationHistory.dropLast())
+                let stream = aiService.sendMessageStream(prompt: text, conversationHistory: previousMessages, instructions: instructions, turnContext: context)
                 for try await chunk in stream {
+                    reply += chunk
                     await MainActor.run {
                         if let index = self.conversationHistory.firstIndex(where: { $0.id == assistantMessageID }) {
                             self.conversationHistory[index].content += chunk
@@ -215,6 +226,7 @@ public final class DockViewModel: ObservableObject {
                     }
                 }
             } catch {
+                reply = ""
                 await MainActor.run {
                     if let index = self.conversationHistory.firstIndex(where: { $0.id == assistantMessageID }) {
                         self.conversationHistory[index].content = "⚠️ Error: \(error.localizedDescription)"
@@ -222,10 +234,79 @@ public final class DockViewModel: ObservableObject {
                 }
             }
             
+            reply = Self.cleanReply(reply)
             await MainActor.run {
+                // The on-device model sometimes adds markdown bold markers; the chat shows plain text.
+                if let index = self.conversationHistory.firstIndex(where: { $0.id == assistantMessageID }),
+                   !self.conversationHistory[index].content.hasPrefix("⚠️") {
+                    self.conversationHistory[index].content = Self.cleanReply(self.conversationHistory[index].content)
+                }
                 self.isAIStreaming = false
+                // Memory keeps both sides: what you asked and what the AI said.
+                if rememberThis && !reply.isEmpty {
+                    self.aiMemory.record(user: text, assistant: reply)
+                }
             }
         }
+    }
+    
+    static func cleanReply(_ text: String) -> String {
+        text.replacingOccurrences(of: "**", with: "")
+            .replacingOccurrences(of: "__", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    /// Background for this one message: the time, relevant memories (if memory is on),
+    /// and what's on the Mac (Computer mode, only what's allowed).
+    private func buildAIContext(for text: String) -> String {
+        var parts = [AIAssistantSettings.nowLine()]
+        
+        if aiSettings.memoryEnabled && aiSettings.memoryConsentGiven {
+            let memories = aiMemory.contextBlock(for: text)
+            if !memories.isEmpty { parts.append(memories) }
+        }
+        
+        if aiSettings.mode == .computer {
+            if aiSettings.isAllowed(.dock) { parts.append(dockSnapshot()) }
+            if aiSettings.isAllowed(.currentApp), let app = appTracker.appDescription() {
+                parts.append("They were just using: \(app)")
+            }
+            if aiSettings.isAllowed(.selectedText), let selected = appTracker.selectedText() {
+                parts.append("Text they have highlighted in that app:\n\"\"\"\n\(selected)\n\"\"\"")
+            }
+        }
+        // Keep it small enough for the on-device model.
+        return String(parts.joined(separator: "\n\n").prefix(6000))
+    }
+    
+    /// A short summary of the dock's contents for Computer mode.
+    private func dockSnapshot() -> String {
+        var lines = ["What's in their Master Dock right now:"]
+        
+        let time = DateFormatter()
+        time.dateFormat = "h:mm a"
+        let events = calendarService.todayEvents.prefix(8).map { event -> String in
+            event.isAllDay ? "\(event.title) (all day)" : "\(event.title) \(time.string(from: event.startDate))-\(time.string(from: event.endDate))"
+        }
+        lines.append("Today's events: " + (events.isEmpty ? "none" : events.joined(separator: "; ")))
+        
+        if let track = mediaService.currentTrack {
+            lines.append("Music: \(mediaService.isPlaying ? "playing" : "paused") \"\(track.title)\" by \(track.artist)")
+        }
+        
+        let todos = checklistService.items.prefix(10).map { "\($0.isCompleted ? "[done]" : "[ ]") \($0.title)" }
+        if !todos.isEmpty { lines.append("Checklist: " + todos.joined(separator: "; ")) }
+        
+        let notes = (UserDefaults.standard.string(forKey: "quick_notes_text") ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !notes.isEmpty { lines.append("Quick notes: " + AIMemoryStore.clip(notes, 500)) }
+        
+        let clips = clipboardService.items.prefix(5).compactMap { item -> String? in
+            guard let text = item.textContent else { return item.type == .image ? "(an image)" : nil }
+            return "\"" + AIMemoryStore.clip(text.replacingOccurrences(of: "\n", with: " "), 160) + "\""
+        }
+        if !clips.isEmpty { lines.append("Recently copied (newest first): " + clips.joined(separator: "; ")) }
+        
+        return lines.joined(separator: "\n")
     }
     
     public func clearConversation() {

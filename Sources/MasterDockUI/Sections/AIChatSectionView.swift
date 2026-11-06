@@ -58,9 +58,7 @@ public struct AIChatSectionView: View {
         VStack(alignment: .leading, spacing: 10) {
             // Apple Intelligence Header (Clean Title without duplicate icon)
             HStack {
-                Text("Apple Intelligence")
-                    .font(AppTypography.titleMedium)
-                    .foregroundColor(.white)
+                DockCardTitle("Apple Intelligence", font: AppTypography.titleMedium)
                 
                 Spacer()
                 
@@ -70,9 +68,12 @@ public struct AIChatSectionView: View {
                             .font(AppTypography.captionBold)
                             .foregroundColor(GlassTheme.accentCyan)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressable)
                 }
             }
+            
+            // AI mode (General / Personal / Computer) and memory
+            AIModeBar()
             
             // Conversation preview area if messages exist
             if !conversation.isEmpty {
@@ -88,7 +89,7 @@ public struct AIChatSectionView: View {
                                 HStack(spacing: 6) {
                                     ProgressView()
                                         .scaleEffect(0.6)
-                                    Text("Apple Intelligence is thinking...")
+                                    Text("Thinking...")
                                         .font(AppTypography.caption)
                                         .foregroundColor(.white.opacity(0.65))
                                     Spacer()
@@ -130,7 +131,7 @@ public struct AIChatSectionView: View {
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.65))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressable)
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
@@ -140,7 +141,7 @@ public struct AIChatSectionView: View {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.2), lineWidth: 0.6)
+                        .strokeBorder(Color.white.opacity(0.06), lineWidth: 0.6)
                 )
                 .transition(.scale.combined(with: .opacity))
             }
@@ -166,7 +167,7 @@ public struct AIChatSectionView: View {
                         .padding(5)
                         .background(Circle().fill(Color.white.opacity(0.14)))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
                 .help("Attach a file to chat (PDF, code, images, docs)")
                 
                 // Send button
@@ -176,7 +177,7 @@ public struct AIChatSectionView: View {
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(GlassTheme.accentBlue)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressable)
                 }
             }
             .padding(.horizontal, 12)
@@ -261,7 +262,7 @@ private struct ChatMessageBubble: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.35), lineWidth: 0.8)
+                            .strokeBorder(Color.white.opacity(0.12), lineWidth: 0.8)
                     )
             } else {
                 VStack(alignment: .leading, spacing: 4) {
@@ -336,7 +337,7 @@ public struct AIVoiceOverlayView: View {
                         .padding(6)
                         .background(Circle().fill(Color.white.opacity(0.14)))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
             }
             .padding(.horizontal, 4)
             
@@ -425,7 +426,7 @@ public struct AIVoiceOverlayView: View {
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .strokeBorder(Color.white.opacity(0.35), lineWidth: 0.8)
+                                        .strokeBorder(Color.white.opacity(0.12), lineWidth: 0.8)
                                 )
                         }
                     }

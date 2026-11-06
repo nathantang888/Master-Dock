@@ -39,6 +39,20 @@ public func XCTAssertGreaterThan<T: Comparable>(_ a: T, _ b: T, file: String = #
     }
 }
 
+public func XCTAssertNotNil<T>(_ a: T?, _ message: String = "", file: String = #file, line: Int = #line) {
+    if a == nil {
+        print("\n   ❌ FAILURE: Expected non-nil value, got nil. \(message) [\(file):\(line)]")
+        exit(1)
+    }
+}
+
+public func XCTAssertNil<T>(_ a: T?, _ message: String = "", file: String = #file, line: Int = #line) {
+    if a != nil {
+        print("\n   ❌ FAILURE: Expected nil, got '\(String(describing: a))'. \(message) [\(file):\(line)]")
+        exit(1)
+    }
+}
+
 public func XCTFail(_ message: String, file: String = #file, line: Int = #line) {
     print("\n   ❌ FAILURE: \(message) [\(file):\(line)]")
     exit(1)

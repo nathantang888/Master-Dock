@@ -12,75 +12,35 @@ echo "=================================================="
 echo "      BUILDING MASTER DOCK MACOS APPLICATION      "
 echo "=================================================="
 
-# 1. Compile C Multitouch Bridge
-echo "[1/4] Compiling MasterDockMultitouchC..."
-clang -c "Sources/MasterDockMultitouchC/MultitouchSupportBridge.c" \
-    -I "Sources/MasterDockMultitouchC/include" \
-    -isysroot "${SDK_PATH}" \
-    -fmodules-cache-path="${CACHE_DIR}" \
-    -o "${BUILD_DIR}/MultitouchSupportBridge.o"
+# 1. Build MasterDock executable via SPM
+echo "[1/3] Building MasterDock with Swift Package Manager..."
+swift build
 
-# 2. Collect Swift Source Files via Array
-echo "[2/4] Compiling MasterDock Swift Sources..."
-SWIFT_SOURCES=()
-while IFS= read -r -d '' file; do
-    SWIFT_SOURCES+=("$file")
-done < <(find Sources -name "*.swift" -print0)
-
-swiftc -emit-executable \
-    -sdk "${SDK_PATH}" \
-    -module-cache-path "${CACHE_DIR}" \
-    -Xcc -fmodules-cache-path="${CACHE_DIR}" \
-    -I "Sources/MasterDockMultitouchC/include" \
-    "${BUILD_DIR}/MultitouchSupportBridge.o" \
-    "${SWIFT_SOURCES[@]}" \
-    -framework AppKit \
-    -framework SwiftUI \
-    -framework EventKit \
-    -framework AVFoundation \
-    -framework Speech \
-    -framework Carbon \
-    -framework Foundation \
-    -o "${BUILD_DIR}/bin/MasterDock"
+# Copy built executable to bin
+mkdir -p "${BUILD_DIR}/bin"
+BUILT_BIN=$(find .build -name MasterDock -type f -perm +111 | grep "debug/MasterDock" | head -n 1)
+if [ -n "${BUILT_BIN}" ]; then
+    cp "${BUILT_BIN}" "${BUILD_DIR}/bin/MasterDock"
+    chmod +x "${BUILD_DIR}/bin/MasterDock"
+fi
 
 echo "✅ Successfully built MasterDock executable at ${BUILD_DIR}/bin/MasterDock"
 
-# 3. Compile Test Runner
-echo "[3/4] Compiling MasterDock Test Suite..."
-TEST_SOURCES=()
-while IFS= read -r -d '' file; do
-    TEST_SOURCES+=("$file")
-done < <(find Tests -name "*.swift" -print0)
+# 2. Build and Run Test Suite via SPM
+echo "[2/3] Building MasterDock Test Suite..."
+swift build --target MasterDockTests
 
-NON_APP_SOURCES=()
-while IFS= read -r -d '' file; do
-    if [[ "$file" != *"AppMain.swift"* && "$file" != *"AppDelegate.swift"* ]]; then
-        NON_APP_SOURCES+=("$file")
-    fi
-done < <(find Sources -name "*.swift" -print0)
-
-swiftc -emit-executable \
-    -sdk "${SDK_PATH}" \
-    -module-cache-path "${CACHE_DIR}" \
-    -Xcc -fmodules-cache-path="${CACHE_DIR}" \
-    -I "Sources/MasterDockMultitouchC/include" \
-    "${BUILD_DIR}/MultitouchSupportBridge.o" \
-    "${NON_APP_SOURCES[@]}" \
-    "${TEST_SOURCES[@]}" \
-    -framework AppKit \
-    -framework SwiftUI \
-    -framework EventKit \
-    -framework AVFoundation \
-    -framework Speech \
-    -framework Carbon \
-    -framework Foundation \
-    -o "${BUILD_DIR}/bin/MasterDockTests"
+TEST_BIN=$(find .build -name MasterDockTests -type f -perm +111 | grep "debug/MasterDockTests" | head -n 1)
+if [ -n "${TEST_BIN}" ]; then
+    cp "${TEST_BIN}" "${BUILD_DIR}/bin/MasterDockTests"
+    chmod +x "${BUILD_DIR}/bin/MasterDockTests"
+fi
 
 echo "✅ Successfully built MasterDockTests at ${BUILD_DIR}/bin/MasterDockTests"
 
-# 4. Run Test Suite
-echo "[4/4] Executing MasterDock Tests..."
-"${BUILD_DIR}/bin/MasterDockTests"
+# 3. Run Test Suite
+echo "[3/3] Executing MasterDock Tests..."
+swift run MasterDockTests
 
 echo ""
 echo "🎉 ALL BUILD & TEST STAGES PASSED SUCCESSFULLY!"

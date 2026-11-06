@@ -42,6 +42,10 @@ public final class GestureStateMachine: @unchecked Sendable {
     private var lastTouchY: Double = 0
     private var lastTimestamp: Double = 0
     private var isGestureActive = false
+    /// Low-passed finger speed (trackpad widths per second). A single trackpad frame is noisy,
+    /// especially the one where fingers lift, so the release decision uses this smoothed value.
+    private var smoothedVelocityX: Double = 0
+    private var smoothedVelocityY: Double = 0
     private var activeGestureType: GestureType = .none
     
     private enum GestureType {
@@ -88,6 +92,8 @@ public final class GestureStateMachine: @unchecked Sendable {
                 lastTouchX = averageX
                 lastTouchY = averageY
                 lastTimestamp = timestamp
+                smoothedVelocityX = 0
+                smoothedVelocityY = 0
                 if !isDockOpen {
                     updateState(.trackingLeftSwipe(progress: 0.0, velocityX: 0.0))
                 }
@@ -99,6 +105,8 @@ public final class GestureStateMachine: @unchecked Sendable {
                 lastTouchX = averageX
                 lastTouchY = averageY
                 lastTimestamp = timestamp
+                smoothedVelocityX = 0
+                smoothedVelocityY = 0
                 updateState(.trackingTopSwipe(progress: 0.0, velocityY: 0.0))
             }
             // If touch starts away from the left edge (e.g. effectiveLeftX > 0.20) while dock is open,
@@ -113,13 +121,14 @@ public final class GestureStateMachine: @unchecked Sendable {
         case .leftToRightOpen:
             let deltaX = averageX - initialTouchX
             let currentVelocityX = (averageX - lastTouchX) / dt
+            smoothedVelocityX = Self.smooth(smoothedVelocityX, toward: currentVelocityX, dt: dt)
             let progress = max(0.0, min(1.0, deltaX / 0.8))
             
             lastTouchX = averageX
             lastTouchY = averageY
             lastTimestamp = timestamp
             
-            updateState(.trackingLeftSwipe(progress: progress, velocityX: currentVelocityX))
+            updateState(.trackingLeftSwipe(progress: progress, velocityX: smoothedVelocityX))
             
         case .leftToRightClose:
             // Tracking left-edge swipe while open to toggle close
@@ -130,13 +139,14 @@ public final class GestureStateMachine: @unchecked Sendable {
         case .topToBottom:
             let deltaY = initialTouchY - averageY
             let currentVelocityY = (lastTouchY - averageY) / dt
+            smoothedVelocityY = Self.smooth(smoothedVelocityY, toward: currentVelocityY, dt: dt)
             let progress = max(0.0, min(1.0, deltaY / 0.7))
             
             lastTouchX = averageX
             lastTouchY = averageY
             lastTimestamp = timestamp
             
-            updateState(.trackingTopSwipe(progress: progress, velocityY: currentVelocityY))
+            updateState(.trackingTopSwipe(progress: progress, velocityY: smoothedVelocityY))
             
         case .none:
             break
@@ -156,10 +166,14 @@ public final class GestureStateMachine: @unchecked Sendable {
             
         case .leftToRightOpen:
             if case .trackingLeftSwipe(let progress, let velocityX) = currentState {
-                if progress >= configuration.voiceCommitThreshold {
+                // Decide from where the swipe is GOING, not just where the fingers stopped
+                // (Apple's momentum projection): a quick short flick opens the dock, and a swipe
+                // pulled back toward the edge cancels even if it had travelled far.
+                let projected = progress + Self.project(velocity: velocityX / 0.8)
+                if progress >= configuration.voiceCommitThreshold && projected >= configuration.voiceCommitThreshold {
                     isDockOpen = true
                     updateState(.voiceModeActive)
-                } else if progress >= configuration.dockCommitThreshold || (progress >= 0.10 && velocityX > 0.6) {
+                } else if projected >= configuration.dockCommitThreshold {
                     isDockOpen = true
                     updateState(.dockRevealed(mode: .standardDock))
                 } else {
@@ -173,7 +187,8 @@ public final class GestureStateMachine: @unchecked Sendable {
             
         case .topToBottom:
             if case .trackingTopSwipe(let progress, let velocityY) = currentState {
-                if progress >= 0.15 || velocityY > 0.6 {
+                let projected = progress + Self.project(velocity: velocityY / 0.7)
+                if projected >= 0.15 {
                     isDockOpen = true
                     updateState(.voiceModeActive)
                 } else {
@@ -207,6 +222,18 @@ public final class GestureStateMachine: @unchecked Sendable {
         case .expandedVoice:
             updateState(.voiceModeActive)
         }
+    }
+    
+    /// Apple's projection from "Designing Fluid Interfaces": how far a motion with this release
+    /// velocity would travel before coming to rest (same units as the velocity, per second).
+    public static func project(velocity: Double, decelerationRate: Double = 0.998) -> Double {
+        return (velocity / 1000.0) * decelerationRate / (1.0 - decelerationRate)
+    }
+    
+    /// Frame-rate independent low-pass filter for the finger speed.
+    static func smooth(_ current: Double, toward sample: Double, dt: Double) -> Double {
+        let blend = 1.0 - exp(-dt / 0.035)
+        return current + (sample - current) * blend
     }
     
     private func updateState(_ newState: GestureDockState) {

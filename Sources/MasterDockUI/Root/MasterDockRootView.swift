@@ -4,23 +4,26 @@ import MasterDockServices
 import MasterDockAI
 
 public struct MasterDockRootView: View {
-    @ObservedObject public var clipboardService: ClipboardMonitorService
-    @ObservedObject public var mediaService: MediaService
-    @ObservedObject public var calendarService: CalendarService
-    @ObservedObject public var wallpaperService: WallpaperService
-    @ObservedObject public var appLauncher: AppLauncherService
-    @ObservedObject public var folderService: FolderService
-    @ObservedObject public var statsService: SystemStatsService
-    @ObservedObject public var weatherService: WeatherService
-    @ObservedObject public var checklistService: ChecklistService
-    @ObservedObject public var promptService: PromptLibraryService
-    @ObservedObject public var audioPipeline: AudioRecordingPipeline
+    // Each card watches its own service. The root only hands them down, so a song's progress
+    // ticking or CPU stats updating no longer redraws the entire dock (that caused hitches).
+    public let clipboardService: ClipboardMonitorService
+    public let mediaService: MediaService
+    public let calendarService: CalendarService
+    public let wallpaperService: WallpaperService
+    public let appLauncher: AppLauncherService
+    public let folderService: FolderService
+    public let statsService: SystemStatsService
+    public let weatherService: WeatherService
+    public let checklistService: ChecklistService
+    public let promptService: PromptLibraryService
+    public let audioPipeline: AudioRecordingPipeline
     
     @Binding public var isVoiceModeActive: Bool
     @Binding public var liveVoiceTranscript: String
     @Binding public var aiPromptInput: String
     @Binding public var conversationHistory: [AIMessage]
     @Binding public var isAIStreaming: Bool
+    @Binding public var isPinned: Bool
     
     public var onSendMessage: (String) -> Void
     public var onClearChat: () -> Void
@@ -30,6 +33,7 @@ public struct MasterDockRootView: View {
     public var onDismiss: () -> Void
     
     @State private var selectedTab: DockTab = .all
+    @ObservedObject private var layout = DockLayoutStore.shared
     @State private var tabLeadingFade: CGFloat = 0.0
     @State private var tabTrailingFade: CGFloat = 1.0
     
@@ -61,6 +65,7 @@ public struct MasterDockRootView: View {
         aiPromptInput: Binding<String>,
         conversationHistory: Binding<[AIMessage]>,
         isAIStreaming: Binding<Bool>,
+        isPinned: Binding<Bool> = .constant(false),
         onSendMessage: @escaping (String) -> Void,
         onClearChat: @escaping () -> Void,
         onVoiceDone: @escaping () -> Void,
@@ -84,6 +89,7 @@ public struct MasterDockRootView: View {
         self._aiPromptInput = aiPromptInput
         self._conversationHistory = conversationHistory
         self._isAIStreaming = isAIStreaming
+        self._isPinned = isPinned
         self.onSendMessage = onSendMessage
         self.onClearChat = onClearChat
         self.onVoiceDone = onVoiceDone
@@ -122,6 +128,50 @@ public struct MasterDockRootView: View {
         .preferredColorScheme(.dark)
     }
     
+    /// The contents of each widget card.
+    @ViewBuilder
+    private func cardContent(for kind: DockWidgetKind) -> some View {
+        switch kind {
+        case .ai:
+            VStack(spacing: 12) {
+                AIChatSectionView(
+                    promptText: $aiPromptInput,
+                    conversation: $conversationHistory,
+                    isStreaming: $isAIStreaming,
+                    onSendMessage: onSendMessage,
+                    onClear: onClearChat
+                )
+                AIPromptsSectionView(promptService: promptService) { action in
+                    let clipboardText = clipboardService.items.first(where: { $0.type == .text })?.textContent ?? ""
+                    let resolved = promptService.resolvePrompt(action, clipboardContent: clipboardText)
+                    onSendMessage(resolved)
+                }
+            }
+        case .media:
+            MediaSectionView(mediaService: mediaService)
+        case .calendar:
+            CalendarSectionView(calendarService: calendarService)
+        case .clipboard:
+            ClipboardSectionView(clipboardService: clipboardService)
+        case .checklist:
+            ChecklistSectionView(checklistService: checklistService)
+        case .notes:
+            QuickNotesWidget()
+        case .timer:
+            FocusTimerWidget()
+        case .calculator:
+            CalculatorWidget()
+        case .worldClock:
+            WorldClockWidget()
+        case .apps:
+            AppFolderSectionView(appLauncher: appLauncher, folderService: folderService)
+        case .wallpapers:
+            WallpaperSectionView(wallpaperService: wallpaperService)
+        case .system:
+            WidgetDrawerSectionView(statsService: statsService, weatherService: weatherService)
+        }
+    }
+    
     private var standardDockContent: some View {
         VStack(spacing: 8) {
             // Clean Top Header Bar (Matching macOS Notification Center Header)
@@ -138,25 +188,20 @@ public struct MasterDockRootView: View {
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(
-                    ZStack {
-                        Capsule()
-                            .fill(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.52))
-                        Capsule()
-                            .fill(GlassTheme.pillGlassFill)
-                        Capsule()
-                            .fill(GlassTheme.pillSheen)
-                    }
-                )
-                .overlay(
-                    Capsule()
-                        .strokeBorder(GlassTheme.subtleSpecularBorder, lineWidth: 0.75)
-                )
-                .shadow(color: Color.black.opacity(0.20), radius: 4, x: 0, y: 1)
+                .liquidGlassControl(Capsule(), interactive: false)
                 
                 Spacer()
                 
                 HStack(spacing: 7) {
+                    GlassIconButton(
+                        iconSystemName: isPinned ? "pin.fill" : "pin",
+                        size: 28,
+                        iconSize: 11,
+                        accentColor: isPinned ? GlassTheme.accentCyan : nil,
+                        helpText: isPinned ? "Dock is Pinned (Won't close on outside clicks)" : "Pin Dock (Keep open when clicking other apps)",
+                        action: { isPinned.toggle() }
+                    )
+                    
                     GlassIconButton(
                         iconSystemName: "mic.fill",
                         size: 28,
@@ -198,23 +243,10 @@ public struct MasterDockRootView: View {
                                 .foregroundColor(selectedTab == tab ? .white : .white.opacity(0.85))
                                 .padding(.horizontal, 11)
                                 .padding(.vertical, 5)
-                                .background(
-                                    ZStack {
-                                        Capsule()
-                                            .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.accentBlue.opacity(0.85)) : AnyShapeStyle(Color(red: 0.16, green: 0.16, blue: 0.18).opacity(0.50)))
-                                        Capsule()
-                                            .fill(selectedTab == tab ? AnyShapeStyle(GlassTheme.liquidGlassHoverSheen) : AnyShapeStyle(GlassTheme.pillGlassFill))
-                                        Capsule()
-                                            .fill(selectedTab == tab ? GlassTheme.liquidGlassHoverSheen : GlassTheme.pillSheen)
-                                    }
-                                )
-                                .overlay(
-                                    Capsule()
-                                        .strokeBorder(selectedTab == tab ? AnyShapeStyle(Color.white.opacity(0.60)) : AnyShapeStyle(GlassTheme.subtleSpecularBorder), lineWidth: 0.75)
-                                )
-                                .shadow(color: selectedTab == tab ? GlassTheme.accentBlue.opacity(0.40) : Color.black.opacity(0.15), radius: selectedTab == tab ? 6 : 3, x: 0, y: 1)
+                                // Real Liquid Glass chips; the selected tab is blue-tinted glass.
+                                .liquidGlassControl(Capsule(), tint: selectedTab == tab ? GlassTheme.accentBlue.opacity(0.85) : nil)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.pressable)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -250,89 +282,55 @@ public struct MasterDockRootView: View {
             
             // Main Scrollable Floating Cards with Dynamic Edge Fading
             ScrollView(.vertical, showsIndicators: false) {
+                GlassGroup(spacing: 4) {
                 VStack(spacing: 12) {
-                    // 1. Apple Intelligence & Prompts
-                    if selectedTab == .all || selectedTab == .ai {
-                        GlassCard {
-                            VStack(spacing: 12) {
-                                AIChatSectionView(
-                                    promptText: $aiPromptInput,
-                                    conversation: $conversationHistory,
-                                    isStreaming: $isAIStreaming,
-                                    onSendMessage: onSendMessage,
-                                    onClear: onClearChat
-                                )
-                                
-                                AIPromptsSectionView(promptService: promptService) { action in
-                                    let clipboardText = clipboardService.items.first(where: { $0.type == .text })?.textContent ?? ""
-                                    let resolved = promptService.resolvePrompt(action, clipboardContent: clipboardText)
-                                    onSendMessage(resolved)
-                                }
-                            }
+                    // Cards come from the user's layout (order, visibility and names are customizable).
+                    ForEach(layout.visibleWidgets.filter { selectedTab == .all || $0.kind.tab == selectedTab }) { config in
+                        EditableDockCard(kind: config.kind, layout: layout) {
+                            GlassCard { cardContent(for: config.kind) }
                         }
+                        .environment(\.dockCardKind, config.kind)
+                        .transition(.opacity.combined(with: .scale(scale: 0.97)))
                     }
                     
-                    // 2. Clipboard History
-                    if selectedTab == .all || selectedTab == .clipboard {
-                        GlassCard {
-                            ClipboardSectionView(clipboardService: clipboardService)
-                        }
-                    }
-                    
-                    // 3. Today's Calendar & Schedule
-                    if selectedTab == .all || selectedTab == .agenda {
-                        GlassCard {
-                            CalendarSectionView(calendarService: calendarService)
-                        }
-                    }
-                    
-                    // 4. Media Controller
-                    if selectedTab == .all || selectedTab == .agenda {
-                        GlassCard {
-                            MediaSectionView(mediaService: mediaService)
-                        }
-                    }
-                    
-                    // 5. Daily Checklist
-                    if selectedTab == .all || selectedTab == .agenda {
-                        GlassCard {
-                            ChecklistSectionView(checklistService: checklistService)
-                        }
-                    }
-                    
-                    // 6. Favorite Apps & Quick Folders
-                    if selectedTab == .all || selectedTab == .apps {
-                        GlassCard {
-                            AppFolderSectionView(appLauncher: appLauncher, folderService: folderService)
-                        }
-                    }
-                    
-                    // 7. Wallpapers
-                    if selectedTab == .all || selectedTab == .widgets {
-                        GlassCard {
-                            WallpaperSectionView(wallpaperService: wallpaperService)
-                        }
-                    }
-                    
-                    // 8. Widget Drawer & System Stats
-                    if selectedTab == .all || selectedTab == .widgets {
-                        GlassCard {
-                            WidgetDrawerSectionView(statsService: statsService, weatherService: weatherService)
-                        }
+                    if layout.isEditing {
+                        GlassCard { HiddenWidgetsPanel(layout: layout) }
+                            .transition(.opacity)
                     }
                 }
+                }
                 .padding(.horizontal, 16)
-                .padding(.top, 4)
+                // Extra room above the first card so its soft shadow isn't cropped at the top of
+                // the scroll area (a cropped shadow showed up as a hard horizontal line).
+                .padding(.top, 4 + GlassTheme.cardShadowBleed)
                 .padding(.bottom, 20)
+                // Extra room to the right so the cards' soft shadow isn't cropped by the scroll
+                // area (a cropped shadow showed up as a gray band with a hard edge).
+                .padding(.trailing, GlassTheme.cardShadowBleed)
                 .background(
-                    ScrollEdgeFadeObserver(fadeLength: 38.0, fadeThreshold: 16.0)
+                    // Short, soft fade like Notification Center
+                    // When scrolled, cards dissolve over the extended top area so they're gone
+                    // before reaching the header buttons. Unscrolled, nothing is masked.
+                    ScrollEdgeFadeObserver(fadeLength: 14.0, fadeThreshold: 12.0, startFadeLength: GlassTheme.cardShadowBleed + 14.0)
                 )
             }
+            // Let the scroll area reach into the see-through strip beside the dock, and up behind
+            // the header so the top card's shadow can fade out naturally.
+            .padding(.trailing, -GlassTheme.cardShadowBleed)
+            .padding(.top, -GlassTheme.cardShadowBleed)
+            // Keep the header buttons above the scroll area so they stay visible and clickable.
+            .zIndex(-1)
             
             // Bottom Floating Liquid Glass Bar (Matching macOS Notification Center bottom bar)
             HStack(spacing: 8) {
-                GlassPillButton(title: "Edit Widgets", iconSystemName: "slider.horizontal.3") {
-                    onOpenSettings()
+                GlassPillButton(
+                    title: layout.isEditing ? "Done" : "Edit Widgets",
+                    iconSystemName: layout.isEditing ? "checkmark" : "slider.horizontal.3"
+                ) {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 1)) {
+                        layout.isEditing.toggle()
+                        if layout.isEditing { selectedTab = .all }
+                    }
                 }
                 
                 GlassIconButton(

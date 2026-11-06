@@ -117,7 +117,7 @@ private struct WallpaperCard: View {
             }
             .scaleEffect(isHovered ? 1.04 : 1.0)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .onHover { hovering in
             withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
                 self.isHovered = hovering

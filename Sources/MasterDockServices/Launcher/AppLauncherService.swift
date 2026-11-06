@@ -44,7 +44,10 @@ public final class AppLauncherService: ObservableObject, AppLauncherServiceProto
     public func scanApplications() {
         let appDirs = [
             URL(fileURLWithPath: "/Applications"),
+            URL(fileURLWithPath: "/Applications/Utilities"),
             URL(fileURLWithPath: "/System/Applications"),
+            URL(fileURLWithPath: "/System/Applications/Utilities"),
+            URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app").deletingLastPathComponent(),
             FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
         ]
         
@@ -59,7 +62,9 @@ public final class AppLauncherService: ObservableObject, AppLauncherServiceProto
             ) else { continue }
             
             for case let fileURL as URL in enumerator {
-                if fileURL.pathExtension == "app" {
+                if fileURL.pathExtension == "app",
+                   !discovered.contains(where: { $0.bundleURL == fileURL }),
+                   dir.path != "/System/Library/CoreServices" || fileURL.lastPathComponent == "Finder.app" {
                     let name = fileURL.deletingPathExtension().lastPathComponent
                     let bundle = Bundle(url: fileURL)
                     let bundleId = bundle?.bundleIdentifier
@@ -128,13 +133,57 @@ public final class AppLauncherService: ObservableObject, AppLauncherServiceProto
         persistFavorites()
     }
     
+    public func isFavorite(_ app: AppItem) -> Bool {
+        favoriteApps.contains { $0.bundleURL == app.bundleURL }
+    }
+    
+    /// Adds any app, including one dragged in from Finder.
+    public func addFavorite(at url: URL) {
+        guard url.pathExtension == "app", !favoriteApps.contains(where: { $0.bundleURL == url }) else { return }
+        let bundleId = Bundle(url: url)?.bundleIdentifier
+        let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier })
+        favoriteApps.append(AppItem(
+            id: url.path,
+            name: FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: ""),
+            bundleIdentifier: bundleId,
+            bundleURL: url,
+            isFavorite: true,
+            isRunning: bundleId.map { running.contains($0) } ?? false
+        ))
+        persistFavorites()
+    }
+    
+    public func removeFavorite(_ app: AppItem) {
+        favoriteApps.removeAll { $0.bundleURL == app.bundleURL }
+        persistFavorites()
+    }
+    
+    /// Moves a favorite left (negative) or right (positive).
+    public func moveFavorite(_ app: AppItem, by offset: Int) {
+        guard let index = favoriteApps.firstIndex(where: { $0.bundleURL == app.bundleURL }) else { return }
+        let target = min(max(index + offset, 0), favoriteApps.count - 1)
+        guard target != index else { return }
+        let item = favoriteApps.remove(at: index)
+        favoriteApps.insert(item, at: target)
+        persistFavorites()
+    }
+    
+    public func moveFavorites(fromOffsets source: IndexSet, toOffset destination: Int) {
+        favoriteApps.move(fromOffsets: source, toOffset: destination)
+        persistFavorites()
+    }
+    
     private func persistFavorites() {
         PersistenceController.shared.save(favoriteApps, forKey: storageKey)
+        // Remember that the list was chosen on purpose, even if it's empty.
+        UserDefaults.standard.set(true, forKey: "favorite_apps_customized")
     }
     
     private func loadFavorites() {
-        if let saved = PersistenceController.shared.load([AppItem].self, forKey: storageKey), !saved.isEmpty {
-            self.favoriteApps = saved
+        if let saved = PersistenceController.shared.load([AppItem].self, forKey: storageKey),
+           !saved.isEmpty || UserDefaults.standard.bool(forKey: "favorite_apps_customized") {
+            // Skip apps that were deleted from the Mac.
+            self.favoriteApps = saved.filter { FileManager.default.fileExists(atPath: $0.bundleURL.path) }
         } else {
             // Default favorites
             let defaultNames = ["Safari", "Terminal", "Finder", "Notes", "Music", "System Settings"]

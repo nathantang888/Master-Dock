@@ -39,7 +39,15 @@ public protocol MediaServiceProtocol: AnyObject {
 
 public protocol CalendarServiceProtocol: AnyObject {
     var todayEvents: [CalendarMeeting] { get }
+    var accounts: [CalendarAccount] { get }
     func refreshEvents() async
+    func linkAccount(_ account: CalendarAccount)
+    func unlinkAccount(id: String)
+    func toggleAccountEnabled(id: String)
+    func updateAccount(_ account: CalendarAccount)
+    func removeAccount(id: String)
+    func updateAccountICS(id: String, icsURL: String?)
+    func addCustomEvent(to accountID: String, title: String, startDate: Date, endDate: Date, location: String?, joinURL: URL?, isAllDay: Bool)
 }
 
 public protocol WallpaperServiceProtocol: AnyObject {

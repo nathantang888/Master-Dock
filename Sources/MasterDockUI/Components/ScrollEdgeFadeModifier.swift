@@ -53,17 +53,21 @@ public struct ScrollEdgeFadeObserver: NSViewRepresentable {
     public var axis: Axis
     public var fadeLength: CGFloat
     public var fadeThreshold: CGFloat
+    /// Optional longer fade at the top/leading edge (defaults to `fadeLength`).
+    public var startFadeLength: CGFloat?
     public var onFadeChange: ((CGFloat, CGFloat) -> Void)?
     
     public init(
         axis: Axis = .vertical,
         fadeLength: CGFloat = 36.0,
         fadeThreshold: CGFloat = 16.0,
+        startFadeLength: CGFloat? = nil,
         onFadeChange: ((CGFloat, CGFloat) -> Void)? = nil
     ) {
         self.axis = axis
         self.fadeLength = fadeLength
         self.fadeThreshold = fadeThreshold
+        self.startFadeLength = startFadeLength
         self.onFadeChange = onFadeChange
     }
     
@@ -72,6 +76,7 @@ public struct ScrollEdgeFadeObserver: NSViewRepresentable {
         view.axis = axis
         view.fadeLength = fadeLength
         view.fadeThreshold = fadeThreshold
+        view.startFadeLength = startFadeLength
         view.onFadeChange = onFadeChange
         return view
     }
@@ -80,6 +85,7 @@ public struct ScrollEdgeFadeObserver: NSViewRepresentable {
         nsView.axis = axis
         nsView.fadeLength = fadeLength
         nsView.fadeThreshold = fadeThreshold
+        nsView.startFadeLength = startFadeLength
         nsView.onFadeChange = onFadeChange
         nsView.handleScroll()
     }
@@ -97,6 +103,7 @@ public class NSScrollEdgeFadingControllerView: NSView {
     }
     public var fadeLength: CGFloat = 36.0
     public var fadeThreshold: CGFloat = 16.0
+    public var startFadeLength: CGFloat?
     public var onFadeChange: ((CGFloat, CGFloat) -> Void)?
     
     public override init(frame frameRect: NSRect) {
@@ -210,25 +217,32 @@ public class NSScrollEdgeFadingControllerView: NSView {
         CATransaction.setDisableActions(true)
         maskLayer.frame = bounds
         
-        let startFraction = max(0.001, min(0.35, fadeLength / max(1.0, dimension)))
+        let startFraction = max(0.001, min(0.45, (startFadeLength ?? fadeLength) / max(1.0, dimension)))
         let endFraction = max(0.001, min(0.35, fadeLength / max(1.0, dimension)))
         
         let startAlpha = 1.0 - state.startFadeProgress
         let endAlpha = 1.0 - state.endFadeProgress
         
-        maskLayer.colors = [
-            NSColor.black.withAlphaComponent(startAlpha).cgColor,
-            NSColor.black.cgColor,
-            NSColor.black.cgColor,
-            NSColor.black.withAlphaComponent(endAlpha).cgColor
-        ]
-        
-        maskLayer.locations = [
-            0.0,
-            NSNumber(value: Double(startFraction)),
-            NSNumber(value: Double(max(startFraction, 1.0 - endFraction))),
-            1.0
-        ]
+        // Eased (smoothstep) falloff instead of a straight line. A linear fade reads as a visible
+        // band; an eased one melts away at the edge like macOS Notification Center.
+        let steps = 6
+        var colors: [CGColor] = []
+        var locations: [NSNumber] = []
+        for i in 0...steps {
+            let t = CGFloat(i) / CGFloat(steps)
+            let eased = t * t * (3 - 2 * t)
+            colors.append(NSColor.black.withAlphaComponent(startAlpha + (1 - startAlpha) * eased).cgColor)
+            locations.append(NSNumber(value: Double(startFraction * t)))
+        }
+        let endStart = max(startFraction, 1.0 - endFraction)
+        for i in 0...steps {
+            let t = CGFloat(i) / CGFloat(steps)
+            let eased = t * t * (3 - 2 * t)
+            colors.append(NSColor.black.withAlphaComponent(1 - (1 - endAlpha) * eased).cgColor)
+            locations.append(NSNumber(value: Double(endStart + (1.0 - endStart) * t)))
+        }
+        maskLayer.colors = colors
+        maskLayer.locations = locations
         CATransaction.commit()
         
         if let callback = onFadeChange {

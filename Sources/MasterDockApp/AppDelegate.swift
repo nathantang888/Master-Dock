@@ -8,11 +8,12 @@ import MasterDockUI
 @MainActor
 public final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
+    private var statusMenu: NSMenu?
     private var settingsWindow: NSWindow?
     
     public func applicationDidFinishLaunching(_ notification: Notification) {
-        // Run as background accessory application
-        NSApp.setActivationPolicy(.accessory)
+        // Run as regular application visible in macOS Dock
+        NSApp.setActivationPolicy(.regular)
         
         let viewModel = DockViewModel.shared
         
@@ -49,6 +50,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
                 get: { viewModel.isAIStreaming },
                 set: { viewModel.isAIStreaming = $0 }
             ),
+            isPinned: Binding(
+                get: { viewModel.windowController.isPinned },
+                set: { viewModel.windowController.isPinned = $0 }
+            ),
             onSendMessage: { [weak viewModel] text in
                 viewModel?.sendAIMessage(text)
             },
@@ -76,11 +81,31 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusItem()
     }
     
+    public func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        let controller = DockViewModel.shared.windowController
+        if !controller.isVisible {
+            controller.present(mode: .standardDock, animated: true)
+        }
+        return true
+    }
+    
+    public func applicationDidBecomeActive(_ notification: Notification) {
+        // The dock activates the app itself when it opens. Only open it here if it is hidden,
+        // otherwise this would restart the slide (or shrink voice mode back to the standard dock).
+        let controller = DockViewModel.shared.windowController
+        if !controller.isVisible {
+            controller.present(mode: .standardDock, animated: true)
+        }
+    }
+    
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
             button.image = NSImage(systemSymbolName: "dock.rectangle", accessibilityDescription: "Master Dock")
             button.imagePosition = .imageLeft
+            button.target = self
+            button.action = #selector(handleStatusItemClick)
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
         
         let menu = NSMenu()
@@ -88,6 +113,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         let toggleItem = NSMenuItem(title: "Toggle Master Dock (⌥ Space)", action: #selector(toggleDock), keyEquivalent: "")
         toggleItem.target = self
         menu.addItem(toggleItem)
+        
+        let pinItem = NSMenuItem(title: "Pin Dock (Keep Visible)", action: #selector(togglePin), keyEquivalent: "p")
+        pinItem.target = self
+        menu.addItem(pinItem)
         
         let voiceItem = NSMenuItem(title: "Open AI Voice Mode (⌥ ⇧ Space)", action: #selector(openVoiceMode), keyEquivalent: "")
         voiceItem.target = self
@@ -105,11 +134,31 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         quitItem.target = self
         menu.addItem(quitItem)
         
-        statusItem?.menu = menu
+        self.statusMenu = menu
+    }
+    
+    @objc private func handleStatusItemClick() {
+        guard let event = NSApp.currentEvent else {
+            toggleDock()
+            return
+        }
+        if event.type == .rightMouseUp || event.modifierFlags.contains(.control) {
+            if let menu = statusMenu {
+                statusItem?.menu = menu
+                statusItem?.button?.performClick(nil)
+                statusItem?.menu = nil
+            }
+        } else {
+            toggleDock()
+        }
     }
     
     @objc private func toggleDock() {
         DockViewModel.shared.toggleStandardDock()
+    }
+    
+    @objc private func togglePin() {
+        DockViewModel.shared.windowController.isPinned.toggle()
     }
     
     @objc private func openVoiceMode() {

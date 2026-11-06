@@ -48,13 +48,17 @@ cat << 'EOF' > "${CONTENTS_DIR}/Info.plist"
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>LSUIElement</key>
-    <true/>
+    <false/>
     <key>NSMicrophoneUsageDescription</key>
     <string>Master Dock requires microphone access for interactive AI Voice Mode.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>Master Dock requires speech recognition to transcribe your voice prompts in real time.</string>
     <key>NSCalendarsUsageDescription</key>
     <string>Master Dock requires calendar access to display today's upcoming meetings.</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Master Dock requires full calendar access to display and organize your linked calendar events.</string>
+    <key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+    <string>Master Dock requires calendar access to add new events.</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>Master Dock requires automation permissions to control Apple Music, Spotify, YouTube Music, and media playback.</string>
     <key>NSHighResolutionCapable</key>
@@ -70,7 +74,14 @@ xattr -cr "${APP_DIR}" || true
 
 if [ -f "${WORKSPACE_DIR}/MasterDock.entitlements" ]; then
     echo "Signing MasterDock.app with entitlements..."
-    codesign --force --deep --sign - --entitlements "${WORKSPACE_DIR}/MasterDock.entitlements" "${APP_DIR}"
+    # Pin the app's code identity to its bundle ID. A plain ad-hoc signature changes on every
+    # build, so macOS treated each rebuild as a new app and asked for Calendar, Microphone and
+    # Speech permission again. With a fixed designated requirement it remembers your answers.
+    xattr -cr "${APP_DIR}" 2>/dev/null || true
+    find "${APP_DIR}" -name "._*" -delete 2>/dev/null || true
+    codesign --force --deep --sign - \
+        --requirements '=designated => identifier "com.masterdock.app"' \
+        --entitlements "${WORKSPACE_DIR}/MasterDock.entitlements" "${APP_DIR}"
 fi
 
 # Sync to /Applications if /Applications/MasterDock.app exists

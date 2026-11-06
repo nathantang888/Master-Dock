@@ -39,7 +39,7 @@ public struct AIPromptsSectionView: View {
                             .padding(.vertical, 7)
                             .liquidPillStyle(cornerRadius: 10)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.pressable)
                     }
                 }
                 .padding(.horizontal, 4)

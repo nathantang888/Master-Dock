@@ -86,6 +86,38 @@ struct TestRunner {
             let c = CalendarServiceTests()
             c.testHappeningNowCountdown()
         }
+        await runTest("testCalendarAccountTypeProperties") {
+            let c = CalendarServiceTests()
+            c.testCalendarAccountTypeProperties()
+        }
+        await runTest("testAccountLinkingAndUnlinking") {
+            let c = CalendarServiceTests()
+            c.testAccountLinkingAndUnlinking()
+        }
+        await runTest("testMultipleAccountsLinking") {
+            let c = CalendarServiceTests()
+            c.testMultipleAccountsLinking()
+        }
+        await runTest("testCalendarMeetingAccountProperties") {
+            let c = CalendarServiceTests()
+            c.testCalendarMeetingAccountProperties()
+        }
+        await runTest("testICalendarParserSingleEvent") {
+            let c = CalendarServiceTests()
+            c.testICalendarParserSingleEvent()
+        }
+        await runTest("testICalendarParserUnfoldingAndSpecialCharacters") {
+            let c = CalendarServiceTests()
+            c.testICalendarParserUnfoldingAndSpecialCharacters()
+        }
+        await runTest("testUpdateAccountICS") {
+            let c = CalendarServiceTests()
+            c.testUpdateAccountICS()
+        }
+        await runTest("testCustomEventAddition") {
+            let c = CalendarServiceTests()
+            c.testCustomEventAddition()
+        }
         
         print("\n-> [Suite] Daily Checklist Tests:")
         await runTest("testChecklistProgressCalculation") {
@@ -181,6 +213,104 @@ struct TestRunner {
         await runTest("testHorizontalReachingEndClearsTrailingFade") {
             let s = ScrollEdgeFadeTests()
             s.testHorizontalReachingEndClearsTrailingFade()
+        }
+        
+        print("\n-> [Suite] Dock Slide Motion Tests:")
+        await runTest("testOpenSpringSettlesQuickly") {
+            DockSlideMotionTests().testOpenSpringSettlesQuickly()
+        }
+        await runTest("testCriticallyDampedCloseNeverOvershoots") {
+            DockSlideMotionTests().testCriticallyDampedCloseNeverOvershoots()
+        }
+        await runTest("testSpringBehavesTheSameAt60And120Hz") {
+            DockSlideMotionTests().testSpringBehavesTheSameAt60And120Hz()
+        }
+        await runTest("testReleaseVelocityCarriesIntoSpring") {
+            DockSlideMotionTests().testReleaseVelocityCarriesIntoSpring()
+        }
+        await runTest("testFollowTracksFingerAndIgnoresStalls") {
+            DockSlideMotionTests().testFollowTracksFingerAndIgnoresStalls()
+        }
+        
+        print("\n-> [Suite] Calendar Account Migration Tests:")
+        await runTest("testOldSavedAccountStillDecodes") {
+            try CalendarAccountMigrationTests().testOldSavedAccountStillDecodes()
+        }
+        await runTest("testMacSourceIDRoundTrips") {
+            try CalendarAccountMigrationTests().testMacSourceIDRoundTrips()
+        }
+        await runTest("testDetectedSourceLinkedState") {
+            try CalendarAccountMigrationTests().testDetectedSourceLinkedState()
+        }
+        
+        print("\n-> [Suite] Momentum Projection Tests:")
+        await runTest("testProjectionMatchesAppleFormula") {
+            MomentumProjectionTests().testProjectionMatchesAppleFormula()
+        }
+        await runTest("testQuickShortFlickOpensDock") {
+            MomentumProjectionTests().testQuickShortFlickOpensDock()
+        }
+        await runTest("testSlowTinyNudgeDoesNotOpen") {
+            MomentumProjectionTests().testSlowTinyNudgeDoesNotOpen()
+        }
+        await runTest("testPullingBackCancelsEvenAfterTravellingFar") {
+            MomentumProjectionTests().testPullingBackCancelsEvenAfterTravellingFar()
+        }
+        
+        print("\n-> [Suite] New Feature Tests (events, calculator, layout, clipboard):")
+        await runTest("testParsesTitleTimeAndDuration") {
+            NewFeatureTests().testParsesTitleTimeAndDuration()
+        }
+        await runTest("testDayWithoutTimeIsAllDay") {
+            NewFeatureTests().testDayWithoutTimeIsAllDay()
+        }
+        await runTest("testNoDateGivesNothing") {
+            NewFeatureTests().testNoDateGivesNothing()
+        }
+        await runTest("testOnlyRealMeetingLinksCount") {
+            NewFeatureTests().testOnlyRealMeetingLinksCount()
+        }
+        await runTest("testCalculatorMath") {
+            NewFeatureTests().testCalculatorMath()
+        }
+        await runTest("testCalculatorRejectsBadInputSafely") {
+            NewFeatureTests().testCalculatorRejectsBadInputSafely()
+        }
+        await runTest("testLayoutReorderHideAndRename") {
+            NewFeatureTests().testLayoutReorderHideAndRename()
+        }
+        await runTest("testLayoutIsSavedAndRestored") {
+            NewFeatureTests().testLayoutIsSavedAndRestored()
+        }
+        await runTest("testPasswordManagerCopiesAreDetected") {
+            NewFeatureTests().testPasswordManagerCopiesAreDetected()
+        }
+        
+        print("\n-> [Suite] AI Memory & Modes Tests:")
+        await runTest("testRemembersTheHouseDaysLater") {
+            AIMemoryTests().testRemembersTheHouseDaysLater()
+        }
+        await runTest("testMemorySurvivesRestartAndCanBeForgotten") {
+            AIMemoryTests().testMemorySurvivesRestartAndCanBeForgotten()
+        }
+        await runTest("testUnrelatedQuestionsDontPullMemories") {
+            AIMemoryTests().testUnrelatedQuestionsDontPullMemories()
+        }
+        await runTest("testModeInstructions") {
+            AIMemoryTests().testModeInstructions()
+        }
+        
+        print("\n-> [Diagnostics] Real EventKit & Service Events:")
+        await CalendarService.shared.refreshEvents()
+        print("   • Active Accounts in Shared Service: \(CalendarService.shared.accounts.map { "\($0.name) (\($0.emailOrUsername)) [events: \($0.eventCount)]" })")
+        print("   • Today's Events Count: \(CalendarService.shared.todayEvents.count)")
+        print("   • Calendar accounts on this Mac:")
+        for line in CalendarService.shared.macSourceDiagnostics() {
+            print("     - \(line)")
+        }
+        print("   • Google accounts detected: \(CalendarService.shared.detectedSources.map { "\($0.email) linked=\($0.isLinked)" })")
+        for (i, ev) in CalendarService.shared.todayEvents.enumerated() {
+            print("     \(i+1). [\(ev.accountName ?? "")] [\(ev.calendarName ?? "")] '\(ev.title)' (\(ev.timeRangeString)) location=\(ev.location ?? "none") join=\(ev.joinURL?.absoluteString ?? "none")")
         }
         
         print("\n==================================================")

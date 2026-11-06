@@ -79,9 +79,7 @@ public struct MediaSectionView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(mediaService.activeSource.brandAccentColor)
                 
-                Text(mediaService.activeSource.shortName)
-                    .font(AppTypography.titleMedium)
-                    .foregroundColor(.white)
+                DockCardTitle(mediaService.activeSource.shortName, font: AppTypography.titleMedium)
             }
             
             Spacer()
@@ -128,7 +126,7 @@ public struct MediaSectionView: View {
                         .font(.system(size: 11))
                         .foregroundColor(.white.opacity(0.5))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
                 .help("Clear Search")
             }
         }
@@ -216,7 +214,7 @@ public struct MediaSectionView: View {
                         .padding(.vertical, 5)
                         .background(Capsule().fill(mediaService.activeSource.brandAccentColor))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressable)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
@@ -253,7 +251,7 @@ public struct MediaSectionView: View {
                     .frame(width: 48, height: 48)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.35), lineWidth: 0.8)
+                            .strokeBorder(Color.white.opacity(0.10), lineWidth: 0.8)
                     )
                     .shadow(color: mediaService.activeSource.brandAccentColor.opacity(mediaService.isPlaying ? 0.55 : 0.25), radius: mediaService.isPlaying ? 8 : 4, x: 0, y: 2)
                 
@@ -305,7 +303,7 @@ public struct MediaSectionView: View {
                             .foregroundColor(mediaService.isLiked ? GlassTheme.accentRose : .white.opacity(0.45))
                             .scaleEffect(mediaService.isLiked ? 1.15 : 1.0)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressable)
                     .help(mediaService.isLiked ? "Remove from Liked Songs" : "Save to Liked Songs")
                 }
                 
@@ -366,6 +364,8 @@ public struct MediaSectionView: View {
                         .shadow(color: Color.black.opacity(0.4), radius: 2, x: 0, y: 1)
                         .offset(x: max(0, min(width - 8, width * CGFloat(progress) - 4)))
                 }
+                // Glide between the twice-a-second position updates instead of jumping.
+                .animation(isDraggingScrubber ? nil : .linear(duration: 0.5), value: progress)
                 .contentShape(Rectangle())
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -465,7 +465,7 @@ public struct MediaSectionView: View {
                 .overlay(Circle().strokeBorder(GlassTheme.liquidSpecularBorder, lineWidth: 0.85))
                 .vibrantGlow(color: mediaService.activeSource.brandAccentColor, radius: 6)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pressable)
             .help(mediaService.isPlaying ? "Pause" : "Play")
             
             // Fast-Forward 15s
@@ -523,7 +523,7 @@ public struct MediaSectionView: View {
                         .font(.system(size: 11))
                         .foregroundColor(.white.opacity(0.7))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
                 .help("Toggle Mute")
                 
                 Slider(
@@ -561,9 +561,9 @@ public struct MediaSectionView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(Capsule().fill(Color.white.opacity(0.12)))
-                .overlay(Capsule().strokeBorder(Color.white.opacity(0.2), lineWidth: 0.6))
+                .overlay(Capsule().strokeBorder(Color.white.opacity(0.06), lineWidth: 0.6))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pressable)
         }
         .padding(.horizontal, 4)
     }
@@ -692,7 +692,7 @@ private struct PlaylistRow: View {
             .padding(.vertical, 5)
             .liquidPillStyle(cornerRadius: 10, isHovered: isHovered)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) {
                 self.isHovered = hovering
@@ -778,7 +778,7 @@ private struct SongRow: View {
             .padding(.vertical, 4)
             .liquidPillStyle(cornerRadius: 8, isHovered: isHovered)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.12)) {
                 self.isHovered = hovering
@@ -908,9 +908,9 @@ public struct ChecklistSectionView: View {
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
                             .background(Capsule().fill(GlassTheme.accentBlue))
-                            .shadow(color: GlassTheme.accentBlue.opacity(0.4), radius: 4, x: 0, y: 1)
+                            .shadow(color: GlassTheme.accentBlue.opacity(0.15), radius: 2, x: 0, y: 1)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressable)
                 }
             }
             .padding(.horizontal, 12)
@@ -961,7 +961,7 @@ private struct ChecklistItemRow: View {
                             .padding(4)
                             .background(Circle().fill(Color.white.opacity(0.12)))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressable)
                     .help("Delete task")
                 }
             }
@@ -974,7 +974,7 @@ private struct ChecklistItemRow: View {
             )
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) {
                 self.isHovered = hovering
