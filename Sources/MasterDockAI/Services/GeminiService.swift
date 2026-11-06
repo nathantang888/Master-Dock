@@ -13,7 +13,7 @@ public final class GeminiService: AIServiceProtocol, @unchecked Sendable {
     public func sendMessageStream(prompt: String, conversationHistory: [AIMessage]) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             Task {
-                guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):streamGenerateContent?alt=sse&key=\(apiKey)") else {
+                guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):streamGenerateContent?alt=sse") else {
                     continuation.finish(throwing: URLError(.badURL))
                     return
                 }
@@ -21,6 +21,8 @@ public final class GeminiService: AIServiceProtocol, @unchecked Sendable {
                 var request = URLRequest(url: url)
                 request.httpMethod = "POST"
                 request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+                // Send the key in a header, not the web address, so it never shows up in logs.
+                request.addValue(apiKey, forHTTPHeaderField: "x-goog-api-key")
                 
                 var contents: [[String: Any]] = []
                 for msg in conversationHistory {

@@ -10,6 +10,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var statusMenu: NSMenu?
     private var settingsWindow: NSWindow?
+    private var welcomeWindow: NSWindow?
     
     public func applicationDidFinishLaunching(_ notification: Notification) {
         // Run as regular application visible in macOS Dock
@@ -17,68 +18,22 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         
         let viewModel = DockViewModel.shared
         
-        // Root View binding
-        let rootView = MasterDockRootView(
-            clipboardService: viewModel.clipboardService,
-            mediaService: viewModel.mediaService,
-            calendarService: viewModel.calendarService,
-            wallpaperService: viewModel.wallpaperService,
-            appLauncher: viewModel.appLauncher,
-            folderService: viewModel.folderService,
-            statsService: viewModel.statsService,
-            weatherService: viewModel.weatherService,
-            checklistService: viewModel.checklistService,
-            promptService: viewModel.promptService,
-            audioPipeline: viewModel.audioPipeline,
-            isVoiceModeActive: Binding(
-                get: { viewModel.isVoiceModeActive },
-                set: { viewModel.isVoiceModeActive = $0 }
-            ),
-            liveVoiceTranscript: Binding(
-                get: { viewModel.liveVoiceTranscript },
-                set: { viewModel.liveVoiceTranscript = $0 }
-            ),
-            aiPromptInput: Binding(
-                get: { viewModel.aiPromptInput },
-                set: { viewModel.aiPromptInput = $0 }
-            ),
-            conversationHistory: Binding(
-                get: { viewModel.conversationHistory },
-                set: { viewModel.conversationHistory = $0 }
-            ),
-            isAIStreaming: Binding(
-                get: { viewModel.isAIStreaming },
-                set: { viewModel.isAIStreaming = $0 }
-            ),
-            isPinned: Binding(
-                get: { viewModel.windowController.isPinned },
-                set: { viewModel.windowController.isPinned = $0 }
-            ),
-            onSendMessage: { [weak viewModel] text in
-                viewModel?.sendAIMessage(text)
-            },
-            onClearChat: { [weak viewModel] in
-                viewModel?.clearConversation()
-            },
-            onVoiceDone: { [weak viewModel] in
-                viewModel?.stopVoiceRecordingAndSend()
-            },
-            onStartVoice: { [weak viewModel] in
-                viewModel?.startVoiceRecording()
-            },
-            onOpenSettings: { [weak self] in
-                self?.openSettingsWindow()
-            },
-            onDismiss: { [weak viewModel] in
-                viewModel?.windowController.dismiss()
-            }
+        // The host re-draws the dock whenever the view model changes (voice mode, chat, pin).
+        let rootView = DockRootHost(
+            viewModel: viewModel,
+            windowController: viewModel.windowController,
+            openSettings: { [weak self] in self?.openSettingsWindow() }
         )
         
         viewModel.windowController.setup(with: rootView)
         viewModel.start()
-        viewModel.windowController.present(mode: .standardDock, animated: true)
-        
         setupStatusItem()
+        
+        if UserDefaults.standard.bool(forKey: WelcomeView.seenKey) {
+            viewModel.windowController.present(mode: .standardDock, animated: true)
+        } else {
+            showWelcome()
+        }
     }
     
     public func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -90,6 +45,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     public func applicationDidBecomeActive(_ notification: Notification) {
+        // While the welcome screen is up, don't slide the dock over it.
+        if welcomeWindow?.isVisible == true { return }
         // The dock activates the app itself when it opens. Only open it here if it is hidden,
         // otherwise this would restart the slide (or shrink voice mode back to the standard dock).
         let controller = DockViewModel.shared.windowController
@@ -110,7 +67,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         
         let menu = NSMenu()
         
-        let toggleItem = NSMenuItem(title: "Toggle Master Dock (⌥ Space)", action: #selector(toggleDock), keyEquivalent: "")
+        let toggleItem = NSMenuItem(title: "Toggle Master Dock (\(GlobalHotKeys.toggleDock.display))", action: #selector(toggleDock), keyEquivalent: "")
         toggleItem.target = self
         menu.addItem(toggleItem)
         
@@ -118,9 +75,18 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         pinItem.target = self
         menu.addItem(pinItem)
         
-        let voiceItem = NSMenuItem(title: "Open AI Voice Mode (⌥ ⇧ Space)", action: #selector(openVoiceMode), keyEquivalent: "")
+        let voiceItem = NSMenuItem(title: "Open AI Voice Mode (\(GlobalHotKeys.voiceMode.display))", action: #selector(openVoiceMode), keyEquivalent: "")
         voiceItem.target = self
         menu.addItem(voiceItem)
+        
+        let shortcutItem = NSMenuItem(title: "Keyboard Shortcuts", action: #selector(toggleShortcuts(_:)), keyEquivalent: "")
+        shortcutItem.target = self
+        shortcutItem.state = MultitouchManager.shortcutsEnabled ? .on : .off
+        menu.addItem(shortcutItem)
+        
+        let welcomeItem = NSMenuItem(title: "Show Welcome Screen", action: #selector(openWelcome), keyEquivalent: "")
+        welcomeItem.target = self
+        menu.addItem(welcomeItem)
         
         menu.addItem(NSMenuItem.separator())
         
@@ -169,6 +135,53 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         openSettingsWindow()
     }
     
+    @objc private func toggleShortcuts(_ sender: NSMenuItem) {
+        let enabled = !MultitouchManager.shortcutsEnabled
+        UserDefaults.standard.set(enabled, forKey: MultitouchManager.shortcutsEnabledKey)
+        sender.state = enabled ? .on : .off
+        DockViewModel.shared.multitouchManager.setupHotkeyFallbacks()
+    }
+    
+    @objc private func openWelcome() {
+        showWelcome()
+    }
+    
+    /// The first-launch welcome window.
+    public func showWelcome() {
+        if let existing = welcomeWindow {
+            existing.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 470),
+            styleMask: [.titled, .closable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.isMovableByWindowBackground = true
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.isReleasedWhenClosed = false
+        window.title = "Welcome to Master Dock"
+        window.contentView = NSHostingView(rootView: WelcomeView(onFinish: { [weak self] in
+            self?.welcomeWindow?.close()
+            self?.welcomeWindow = nil
+            DockViewModel.shared.windowController.present(mode: .standardDock, animated: true)
+        }))
+        window.center()
+        // Closing it with the red button counts as done too, so it doesn't come back every launch.
+        NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window, queue: .main) { [weak self] _ in
+            UserDefaults.standard.set(true, forKey: WelcomeView.seenKey)
+            MainActor.assumeIsolated { self?.welcomeWindow = nil }
+        }
+        welcomeWindow = window
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
     @objc private func quitApp() {
         NSApp.terminate(nil)
     }
@@ -194,5 +207,72 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         self.settingsWindow = window
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+}
+
+/// Watches the view model and window controller so the dock updates when they change.
+/// (The dock's root view itself only hands services down to the cards.)
+struct DockRootHost: View {
+    @ObservedObject var viewModel: DockViewModel
+    @ObservedObject var windowController: GlassWindowController
+    let openSettings: () -> Void
+
+    var body: some View {
+    MasterDockRootView(
+                clipboardService: viewModel.clipboardService,
+                mediaService: viewModel.mediaService,
+                calendarService: viewModel.calendarService,
+                wallpaperService: viewModel.wallpaperService,
+                appLauncher: viewModel.appLauncher,
+                folderService: viewModel.folderService,
+                statsService: viewModel.statsService,
+                weatherService: viewModel.weatherService,
+                checklistService: viewModel.checklistService,
+                promptService: viewModel.promptService,
+                audioPipeline: viewModel.audioPipeline,
+                isVoiceModeActive: Binding(
+                    get: { viewModel.isVoiceModeActive },
+                    set: { viewModel.isVoiceModeActive = $0 }
+                ),
+                liveVoiceTranscript: Binding(
+                    get: { viewModel.liveVoiceTranscript },
+                    set: { viewModel.liveVoiceTranscript = $0 }
+                ),
+                aiPromptInput: Binding(
+                    get: { viewModel.aiPromptInput },
+                    set: { viewModel.aiPromptInput = $0 }
+                ),
+                conversationHistory: Binding(
+                    get: { viewModel.conversationHistory },
+                    set: { viewModel.conversationHistory = $0 }
+                ),
+                isAIStreaming: Binding(
+                    get: { viewModel.isAIStreaming },
+                    set: { viewModel.isAIStreaming = $0 }
+                ),
+                isPinned: Binding(
+                    get: { viewModel.windowController.isPinned },
+                    set: { viewModel.windowController.isPinned = $0 }
+                ),
+                onSendMessage: { text in
+                    viewModel.sendAIMessage(text)
+                },
+                onClearChat: {
+                    viewModel.clearConversation()
+                },
+                onVoiceDone: {
+                    viewModel.stopVoiceRecordingAndSend()
+                },
+                onStartVoice: {
+                    viewModel.startVoiceRecording()
+                },
+                onOpenSettings: openSettings,
+                onDismiss: {
+                    viewModel.windowController.dismiss()
+                },
+                onExitVoice: {
+                    viewModel.exitVoiceMode()
+                }
+            )
     }
 }

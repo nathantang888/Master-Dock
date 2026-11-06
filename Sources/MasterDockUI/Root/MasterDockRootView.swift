@@ -31,6 +31,7 @@ public struct MasterDockRootView: View {
     public var onStartVoice: () -> Void
     public var onOpenSettings: () -> Void
     public var onDismiss: () -> Void
+    public var onExitVoice: (() -> Void)?
     
     @State private var selectedTab: DockTab = .all
     @ObservedObject private var layout = DockLayoutStore.shared
@@ -71,7 +72,8 @@ public struct MasterDockRootView: View {
         onVoiceDone: @escaping () -> Void,
         onStartVoice: @escaping () -> Void = {},
         onOpenSettings: @escaping () -> Void,
-        onDismiss: @escaping () -> Void
+        onDismiss: @escaping () -> Void,
+        onExitVoice: (() -> Void)? = nil
     ) {
         self.clipboardService = clipboardService
         self.mediaService = mediaService
@@ -96,6 +98,7 @@ public struct MasterDockRootView: View {
         self.onStartVoice = onStartVoice
         self.onOpenSettings = onOpenSettings
         self.onDismiss = onDismiss
+        self.onExitVoice = onExitVoice
     }
     
     public var body: some View {
@@ -108,7 +111,7 @@ public struct MasterDockRootView: View {
                         userPrompt: conversationHistory.filter { $0.role == .user }.last?.content ?? "",
                         aiResponseText: conversationHistory.filter { $0.role == .assistant }.last?.content ?? "",
                         isAIStreaming: isAIStreaming,
-                        onClose: { isVoiceModeActive = false },
+                        onClose: { if let onExitVoice { onExitVoice() } else { isVoiceModeActive = false } },
                         onStopAndSend: onVoiceDone,
                         onStartRecording: onStartVoice
                     )

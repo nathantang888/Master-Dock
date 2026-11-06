@@ -80,6 +80,8 @@ public final class ClipboardMonitorService: ObservableObject, @unchecked Sendabl
         timer = Timer.scheduledTimer(withTimeInterval: 0.8, repeats: true) { [weak self] _ in
             self?.checkForNewClipboardContent()
         }
+        // Lets macOS bundle this tiny check with other work so the CPU can stay asleep longer.
+        timer?.tolerance = 0.4
     }
 
     public func stopMonitoring() {

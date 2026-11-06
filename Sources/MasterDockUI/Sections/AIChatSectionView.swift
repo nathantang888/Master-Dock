@@ -452,7 +452,7 @@ public struct AIVoiceOverlayView: View {
                         }
                         
                         ScrollView(.vertical, showsIndicators: true) {
-                            Text(aiResponseText.isEmpty ? (isAIStreaming ? "Thinking..." : "No response generated.") : aiResponseText)
+                            Text(aiResponseText.isEmpty ? (isAIStreaming ? "Thinking..." : "I didn't catch that. Tap Ask Another and try again.") : aiResponseText)
                                 .font(AppTypography.body)
                                 .foregroundColor(.white.opacity(0.95))
                                 .frame(maxWidth: .infinity, alignment: .leading)

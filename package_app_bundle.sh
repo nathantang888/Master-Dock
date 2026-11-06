@@ -59,6 +59,10 @@ cat << 'EOF' > "${CONTENTS_DIR}/Info.plist"
     <string>Master Dock requires full calendar access to display and organize your linked calendar events.</string>
     <key>NSCalendarsWriteOnlyAccessUsageDescription</key>
     <string>Master Dock requires calendar access to add new events.</string>
+    <key>NSLocationUsageDescription</key>
+    <string>Master Dock uses your approximate location to show local weather.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Master Dock uses your approximate location to show local weather.</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>Master Dock requires automation permissions to control Apple Music, Spotify, YouTube Music, and media playback.</string>
     <key>NSHighResolutionCapable</key>

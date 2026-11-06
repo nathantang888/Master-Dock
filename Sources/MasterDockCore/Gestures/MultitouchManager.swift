@@ -84,18 +84,38 @@ public final class MultitouchManager: ObservableObject {
         }
     }
     
-    private func setupHotkeyFallbacks() {
-        // Option + Space -> Standard Master Dock
-        // Option + Shift + Space -> AI Voice Mode
-        globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            self?.handleKeyEvent(event)
-        }
-        
-        localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if self?.handleKeyEvent(event) == true {
-                return nil // Consume event
+    public static let shortcutsEnabledKey = "keyboard_shortcuts_enabled"
+    
+    /// Set by the app so shortcuts open and close the dock exactly like the menu bar icon.
+    public var onToggleDock: (() -> Void)?
+    public var onToggleVoice: (() -> Void)?
+    
+    public static var shortcutsEnabled: Bool {
+        UserDefaults.standard.object(forKey: shortcutsEnabledKey) as? Bool ?? true
+    }
+    
+    /// Keyboard shortcuts: Shift+Command+Space opens the dock, Option+Shift+Command+Space opens voice.
+    /// (These replaced Option+Space, which macOS uses to type a special space character.)
+    public func setupHotkeyFallbacks() {
+        GlobalHotKeys.shared.unregisterAll()
+        guard Self.shortcutsEnabled else { return }
+        GlobalHotKeys.shared.register(id: 1, GlobalHotKeys.toggleDock) { [weak self] in
+            guard let self else { return }
+            if let toggle = self.onToggleDock { toggle(); return }
+            if self.currentState == .dockRevealed(mode: .standardDock) {
+                self.stateMachine.resetToIdle()
+            } else {
+                self.stateMachine.triggerManual(mode: .standardDock)
             }
-            return event
+        }
+        GlobalHotKeys.shared.register(id: 2, GlobalHotKeys.voiceMode) { [weak self] in
+            guard let self else { return }
+            if let toggle = self.onToggleVoice { toggle(); return }
+            if self.currentState == .voiceModeActive {
+                self.stateMachine.resetToIdle()
+            } else {
+                self.stateMachine.triggerManual(mode: .expandedVoice)
+            }
         }
     }
     

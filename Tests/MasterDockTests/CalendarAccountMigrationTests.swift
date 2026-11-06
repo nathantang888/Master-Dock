@@ -7,7 +7,7 @@ public struct CalendarAccountMigrationTests {
     /// Accounts saved by older versions have no eventKitSourceID. They must still load.
     public func testOldSavedAccountStillDecodes() throws {
         let oldJSON = """
-        [{"id":"abc","name":"Nathan Work","accountType":"Google Calendar","emailOrUsername":"me@gmail.com","isLinked":true,"isEnabled":true,"eventCount":0}]
+        [{"id":"abc","name":"Alex Work","accountType":"Google Calendar","emailOrUsername":"me@gmail.com","isLinked":true,"isEnabled":true,"eventCount":0}]
         """
         let decoded = try JSONDecoder().decode([CalendarAccount].self, from: Data(oldJSON.utf8))
         XCTAssertEqual(decoded.count, 1)

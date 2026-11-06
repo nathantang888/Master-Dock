@@ -217,7 +217,7 @@ final class CalendarServiceTests {
         let evKey = "test_cal_ev_\(UUID().uuidString)"
         let service = CalendarService(accountsStorageKey: testKey, customEventsStorageKey: evKey, autoRefresh: false)
         let testAcc = CalendarAccount(
-            name: "Nathan Work Test",
+            name: "Alex Work Test",
             accountType: .googleCalendar,
             emailOrUsername: "test@gmail.com"
         )

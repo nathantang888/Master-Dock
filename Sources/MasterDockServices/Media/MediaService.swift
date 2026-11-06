@@ -56,6 +56,18 @@ public final class MediaService: ObservableObject, MediaServiceProtocol {
         pollTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             self?.refreshState()
         }
+        pollTimer?.tolerance = 0.5
+    }
+    
+    /// Asking music apps what's playing costs battery, so only do it while the dock is open.
+    /// Opening the dock checks right away, so it's always up to date when you look.
+    public func setDockVisible(_ visible: Bool) {
+        if visible {
+            startPolling()
+            startPositionTimer()
+        } else {
+            stopPolling()
+        }
     }
     
     public func stopPolling() {

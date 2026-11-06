@@ -25,10 +25,19 @@ public final class SystemStatsService: ObservableObject, SystemStatsServiceProto
     }
     
     public func startMonitoring() {
+        timer?.invalidate()
         updateStats()
-        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        let t = Timer(timeInterval: 2.0, repeats: true) { [weak self] _ in
             self?.updateStats()
         }
+        t.tolerance = 0.5
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
+    }
+    
+    /// Stats are only shown in the dock, so they only update while it's open.
+    public func setDockVisible(_ visible: Bool) {
+        if visible { startMonitoring() } else { stopMonitoring() }
     }
     
     public func stopMonitoring() {

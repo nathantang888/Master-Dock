@@ -44,9 +44,9 @@ public struct AIMemoryTests {
         let suite = UserDefaults(suiteName: "md_ai_\(UUID().uuidString)")!
         let settings = AIAssistantSettings(defaults: suite)
         settings.mode = .personal
-        settings.preferredName = "Nathan"
-        XCTAssertTrue(settings.modeInstructions().contains("Nathan"))
+        settings.preferredName = "Alex"
+        XCTAssertTrue(settings.modeInstructions().contains("Alex"))
         settings.mode = .generic
-        XCTAssertFalse(settings.modeInstructions().contains("Nathan"), "General mode never uses personal info")
+        XCTAssertFalse(settings.modeInstructions().contains("Alex"), "General mode never uses personal info")
     }
 }

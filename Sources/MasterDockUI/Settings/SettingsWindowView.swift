@@ -8,8 +8,9 @@ public struct SettingsWindowView: View {
     
     @AppStorage("dock_width") private var dockWidth: Double = 340.0
     @AppStorage("ai_provider") private var selectedProvider: String = AIProvider.appleIntelligence.rawValue
-    @AppStorage("openai_key") private var openAIKey: String = ""
-    @AppStorage("gemini_key") private var geminiKey: String = ""
+    // API keys live in the macOS Keychain, not the preferences file.
+    @State private var openAIKey: String = KeychainStore.string(for: KeychainStore.openAIKey) ?? ""
+    @State private var geminiKey: String = KeychainStore.string(for: KeychainStore.geminiKey) ?? ""
     @AppStorage("ollama_host") private var ollamaHost: String = "http://localhost:11434"
     @AppStorage("launch_at_login") private var launchAtLogin: Bool = true
     
@@ -24,6 +25,12 @@ public struct SettingsWindowView: View {
     @State private var newAccountICSURL: String = ""
     
     public init() {}
+    
+    private var keychainNote: some View {
+        Label("Saved securely in your Mac's Keychain. Never uploaded or shared.", systemImage: "lock.fill")
+            .font(AppTypography.caption)
+            .foregroundColor(.secondary)
+    }
     
     public var body: some View {
         TabView {
@@ -290,9 +297,13 @@ public struct SettingsWindowView: View {
                 } else if selectedProvider == AIProvider.openAI.rawValue {
                     SecureField("OpenAI API Key (sk-...)", text: $openAIKey)
                         .textFieldStyle(.roundedBorder)
+                        .onChange(of: openAIKey) { _, newValue in KeychainStore.set(newValue, for: KeychainStore.openAIKey) }
+                    keychainNote
                 } else if selectedProvider == AIProvider.gemini.rawValue {
                     SecureField("Google Gemini API Key", text: $geminiKey)
                         .textFieldStyle(.roundedBorder)
+                        .onChange(of: geminiKey) { _, newValue in KeychainStore.set(newValue, for: KeychainStore.geminiKey) }
+                    keychainNote
                 } else if selectedProvider == AIProvider.ollama.rawValue {
                     TextField("Local Ollama Host", text: $ollamaHost)
                         .textFieldStyle(.roundedBorder)

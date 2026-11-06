@@ -45,12 +45,26 @@ public final class DockViewModel: ObservableObject {
     private var aiService: AIServiceProtocol = AppleIntelligenceService()
     
     public init() {
+        KeychainStore.migrateFromUserDefaults()
         bindGestureEngine()
         updateAIService()
+        
+        // Keyboard shortcuts use the same open/close logic as the menu bar icon.
+        multitouchManager.onToggleDock = { [weak self] in self?.toggleStandardDock() }
+        multitouchManager.onToggleVoice = { [weak self] in self?.toggleVoiceMode() }
         
         windowController.onDismiss = { [weak self] in
             self?.multitouchManager.stateMachine.resetToIdle()
         }
+        
+        // Battery: background checks (music, CPU stats) only run while the dock is open.
+        windowController.$isVisible
+            .removeDuplicates()
+            .sink { [weak self] visible in
+                self?.mediaService.setDockVisible(visible)
+                self?.statsService.setDockVisible(visible)
+            }
+            .store(in: &cancellables)
     }
     
     public func start() {
@@ -61,13 +75,13 @@ public final class DockViewModel: ObservableObject {
         let providerName = UserDefaults.standard.string(forKey: "ai_provider") ?? AIProvider.appleIntelligence.rawValue
         
         if providerName == AIProvider.openAI.rawValue {
-            let key = UserDefaults.standard.string(forKey: "openai_key") ?? ""
+            let key = KeychainStore.string(for: KeychainStore.openAIKey) ?? ""
             if !key.isEmpty {
                 self.aiService = OpenAIService(apiKey: key)
                 return
             }
         } else if providerName == AIProvider.gemini.rawValue {
-            let key = UserDefaults.standard.string(forKey: "gemini_key") ?? ""
+            let key = KeychainStore.string(for: KeychainStore.geminiKey) ?? ""
             if !key.isEmpty {
                 self.aiService = GeminiService(apiKey: key)
                 return
@@ -98,9 +112,11 @@ public final class DockViewModel: ObservableObject {
     private func handleGestureState(_ state: GestureDockState) {
         switch state {
         case .trackingLeftSwipe(let progress, _):
+            // Decide fresh on every swipe: short swipe = dock, long swipe = voice. (Before, a
+            // leftover "voice on" from an earlier session made every swipe open voice mode.)
             let isPastHalf = progress >= 0.50
-            if isPastHalf && !isVoiceModeActive {
-                self.isVoiceModeActive = true
+            if isPastHalf != isVoiceModeActive {
+                self.isVoiceModeActive = isPastHalf
             }
             windowController.updateInteractiveProgress(progress, mode: isVoiceModeActive ? .expandedVoice : .standardDock)
             
@@ -138,10 +154,19 @@ public final class DockViewModel: ObservableObject {
             multitouchManager.stateMachine.resetToIdle()
             windowController.dismiss()
         } else {
+            if isVoiceModeActive { stopVoiceRecording() }
             isVoiceModeActive = false
             multitouchManager.stateMachine.isDockOpen = true
             windowController.present(mode: .standardDock)
         }
+    }
+    
+    /// Leaving voice mode (its X or Done button) goes back to the normal dock.
+    public func exitVoiceMode() {
+        stopVoiceRecording()
+        isVoiceModeActive = false
+        multitouchManager.stateMachine.isDockOpen = true
+        windowController.present(mode: .standardDock)
     }
     
     public func toggleVoiceMode() {

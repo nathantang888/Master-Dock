@@ -42,7 +42,7 @@ public struct WidgetDrawerSectionView: View {
                         .foregroundColor(GlassTheme.accentAmber)
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("\(weatherService.currentWeather.temperature)°")
+                        Text(weatherService.currentWeather.condition == "Loading" ? "--°" : "\(weatherService.currentWeather.temperature)°")
                             .font(AppTypography.titleMedium)
                             .foregroundColor(.white)
                         Text(weatherService.currentWeather.condition)
